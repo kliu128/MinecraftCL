@@ -1,0 +1,11 @@
+﻿<Window x:Class="MinecraftCL.MessageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Information" Height="69" Width="300"
+        WindowStyle="ToolWindow" ResizeMode="NoResize"
+        Loaded="MessageWindow_Loaded"
+        Background="Wheat">
+    <Grid Margin="0,0,0,64">
+        <TextBlock x:Name="messageText" HorizontalAlignment="Left" Margin="11,13,0,-32" TextWrapping="Wrap" Text="Message Text Goes Here" VerticalAlignment="Top" Height="19" Width="272"/>
+    </Grid>
+</Window>

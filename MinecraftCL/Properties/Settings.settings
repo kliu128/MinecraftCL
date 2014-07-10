@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MinecraftCL.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="mcInstallDir" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">E:\Kevin\Portable Apps</Value>
+    </Setting>
+    <Setting Name="mcVersion" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">1.7.5</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
