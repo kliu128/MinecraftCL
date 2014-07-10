@@ -397,7 +397,7 @@ namespace MinecraftCL
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {
-                        DownloadDialog.downloadIsInProgress = false;
+                        downloadVar.DownloadDialog.downloadIsInProgress = false;
 
                         if (downloadReturn == "success")
                         {
@@ -456,7 +456,7 @@ namespace MinecraftCL
                     };
                 worker.WorkerReportsProgress = true;
                 worker.RunWorkerAsync();
-                DownloadDialog.downloadIsInProgress = true;
+                downloadVar.DownloadDialog.downloadIsInProgress = true;
                 downloadVar.DownloadDialog.ShowDialog();
             }
             else

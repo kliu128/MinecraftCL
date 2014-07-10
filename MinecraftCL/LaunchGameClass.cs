@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinecraftCL.FeedTheBeast;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -23,28 +24,57 @@ namespace MinecraftCL
             if (profile.VersionType == VersionType.Modpack)
             {
                 // Register the correct version of minecraft and download modpack files if necessary.
+                ObservableCollection<Modpack> modpackList;
                 try
                 {
                     XmlSerializer deserializer = new XmlSerializer(typeof(ObservableCollection<Modpack>));
-                    ObservableCollection<Modpack> modpackList = new ObservableCollection<Modpack>();
 
                     using (FileStream stream = File.OpenRead(System.Environment.CurrentDirectory + @"\.mcl\ModpackSettings.xml"))
                     {
                         modpackList = (ObservableCollection<Modpack>)deserializer.Deserialize(stream);
-                    }
-
-                    foreach (Modpack pack in modpackList)
-                    {
-                        if (pack.name == profile.ModpackInfo.ID)
-                        {
-
-                        }
                     }
                 }
                 catch (Exception e)
                 {
                     return "Modpack information error: " + e;
                 }
+
+                Modpack packToValidate = new Modpack();
+                // Search through the modpack list to find the one specified by
+                // the profile.
+                foreach (var pack in modpackList)
+                {
+                    if (pack.name == profile.ModpackInfo.ID && pack.Type == profile.ModpackInfo.Type)
+                    {
+                        // This is the pack specified to launch
+                        packToValidate = pack;
+                        break;
+                    }
+                }
+
+                #region If pack is FTB public, launch and all that
+                if (packToValidate.Type == ModpackType.FeedTheBeastPublic)
+                {
+                    FTBModpack modpackToLaunch = packToValidate as FTBModpack;
+
+                    // Verify saved information from FTB public servers
+                    foreach (FTBModpack item in FTBLocations.PublicModpacks)
+                    {
+                        if (item.name == packToValidate.name)
+                        {
+                            // Located the modpack on ftb servers, validate info
+                            modpackToLaunch.url = item.url;
+                            modpackToLaunch.dir = item.dir;
+                            modpackToLaunch.repoVersion = item.repoVersion;
+                            break;
+                        }
+                    }
+                    // Check to see if the modpack has already been downloaded,
+                    // and if not, download the modpack
+
+                }
+                #endregion
+
             }
 
             downloadVariables downloadVar = new downloadVariables

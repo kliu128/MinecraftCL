@@ -794,7 +794,7 @@ namespace MinecraftCL
 
                 System.Threading.Thread.Sleep(500);
 
-                DownloadDialog.downloadIsInProgress = false;
+                DDialog.downloadIsInProgress = false;
                 DDialog.Dispatcher.BeginInvoke(
                     (Action)(() => { DDialog.Close(); }));
 
@@ -803,7 +803,7 @@ namespace MinecraftCL
             else
             {
                 // No internet connectivity
-                DownloadDialog.downloadIsInProgress = false;
+                downloaderInfo.DownloadDialog.downloadIsInProgress = false;
                 downloaderInfo.DownloadDialog.Dispatcher.BeginInvoke(
                     (Action)(() => { downloaderInfo.DownloadDialog.Close(); }));
                 return "No internet connectivity is available, cannot download files.";

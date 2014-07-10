@@ -11,7 +11,8 @@ namespace MinecraftCL
 	{
         MojangVanilla,
 	    TechnicPack,
-        FeedTheBeast,
+        FeedTheBeastPublic,
+        FeedTheBeastPrivate,
         MinecraftCL,
         PlaceholderModpack
 	}

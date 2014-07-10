@@ -34,17 +34,16 @@ namespace MinecraftCL
 
         private void addModpackButton_Click(object sender, RoutedEventArgs e)
         {
-            Modpack newPack = new Modpack();
-
             if (ftbPublicCheckbox.IsChecked == true)
             {
-                newPack = ((FTBModpack)ftbPublicPackCombobox.SelectedValue);
-                newPack.Type = ModpackType.FeedTheBeast;
+                FTBModpack newPack = ((FTBModpack)ftbPublicPackCombobox.SelectedValue);
+                newPack.Type = ModpackType.FeedTheBeastPublic;
+                modpackList.Add(newPack);
             }
 
             if (ftbPrivateCheckbox.IsChecked == true)
             {
-                newPack = FTBUtils.ParseSingleModpackXML(FTBLocations.MasterDownloadRepo + FTBLocations.FTB2Static + ftbPrivatePackCodeBox.Text + ".xml");
+                FTBModpack newPack = FTBUtils.ParseSingleModpackXML(FTBLocations.MasterDownloadRepo + FTBLocations.FTB2Static + ftbPrivatePackCodeBox.Text + ".xml");
                 if (newPack == null)
                 {
                     MessageBox.Show("Invalid private pack code.", "Invalid code", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -53,11 +52,10 @@ namespace MinecraftCL
                 }
                 else
                 {
-                    newPack.Type = ModpackType.FeedTheBeast;
+                    newPack.Type = ModpackType.FeedTheBeastPrivate;
+                    newPack.privatePackCode = ftbPrivatePackCodeBox.Text;
                 }
             }
-
-            modpackList.Add(newPack);
 
             // Remove the placeholder "add a modpack" entry if an actual pack is added
             if (modpackList[0].Type == ModpackType.PlaceholderModpack)
