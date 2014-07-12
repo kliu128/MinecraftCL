@@ -53,7 +53,7 @@
             <CheckBox x:Name="showOldVersions" IsChecked="{Binding SelectedProfile.showOldVersions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Checked="showOldVersions_Checked" Unchecked="showOldVersions_Unchecked" Content="Show older versions" HorizontalAlignment="Left" Margin="10,20,-57,0" VerticalAlignment="Top" Width="147"/>
             <Label Content="Version:" HorizontalAlignment="Left" Margin="10,35,0,0" VerticalAlignment="Top" Height="31"/>
             <ComboBox x:Name="versionSelectBox" SelectionChanged="versionSelectBox_SelectionChanged" HorizontalAlignment="Left" Margin="10,64,-94,0" 
-            	VerticalAlignment="Top" Width="184" SelectedValue="{Binding SelectedProfile.Version, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
+            	VerticalAlignment="Top" Width="184" SelectedValue="{Binding Path=SelectedProfile.MojangVersion, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
             	DisplayMemberPath="DisplayName" SelectedValuePath="id" Height="26"
                   />
         </Grid>

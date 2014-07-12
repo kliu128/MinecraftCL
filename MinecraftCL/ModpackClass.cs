@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using System.Runtime.Serialization;
+using System.Xml;
 
 namespace MinecraftCL
 {
@@ -16,6 +17,30 @@ namespace MinecraftCL
         MinecraftCL,
         PlaceholderModpack
 	}
+
+    public static class ModpackTypeExtensions
+    {
+        public static string ToFriendlyString(this ModpackType pack)
+        {
+            switch (pack)
+            {
+                case ModpackType.MojangVanilla:
+                    return "MojangVanilla";
+                case ModpackType.TechnicPack:
+                    return "TechnicPack";
+                case ModpackType.FeedTheBeastPublic:
+                    return "FeedTheBeastPublic";
+                case ModpackType.FeedTheBeastPrivate:
+                    return "FeedTheBeastPrivate";
+                case ModpackType.MinecraftCL:
+                    return "MinecraftCL";
+                case ModpackType.PlaceholderModpack:
+                    return "PlaceholderModpack";
+                default:
+                    throw new InvalidOperationException { Source = "ModpackTypeExtensions.ToFriendlyString()" };
+            }
+        }
+    }
 
     [DataContract]
     [XmlInclude(typeof(FeedTheBeast.FTBModpack))]
@@ -40,6 +65,59 @@ namespace MinecraftCL
                 {
                     return "Placeholder pack. Add your own!";
                 }
+            }
+        }
+
+        public struct modpackInformationReturn
+        {
+            public bool modpackDownloadRequired { get; set; }
+            public bool mojangVersionDownloadRequired { get; set; }
+            public bool versionDownloadRequired
+            {
+                get
+                {
+                    if (mojangVersionDownloadRequired == true || modpackDownloadRequired == true)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets information required to start the modpack. Returns a bool value depending on
+        /// whether it could successfully find the information.
+        /// </summary>
+        /// <param name="pack"></param>
+        /// <returns></returns>
+        public modpackInformationReturn getModpackInformation(Modpack pack, ref startGameVariables sGV)
+        {
+            XmlDocument versionInformationDoc = new XmlDocument();
+            versionInformationDoc.Load(System.Environment.CurrentDirectory + @"\.mcl\VersionInformation.xml");
+
+            if (versionInformationDoc.SelectSingleNode("/versions/modpacks/modpack[@type='" + pack.Type.ToFriendlyString() + "'][@name='" + pack.name + "']") != null)
+            {
+                // Version exists, get version info
+                XmlNode modpackNode = versionInformationDoc.SelectSingleNode("/versions/modpacks/modpack[@type='" + pack.Type.ToFriendlyString() + "'][@name='" + pack.name + "']");
+                sGV.Version = modpackNode.SelectSingleNode("mcVersion").InnerText;
+                
+                string errorInformation;
+                bool minecraftVersionExists = MinecraftUtils.getVersionInformation(ref sGV, out errorInformation);
+
+                return new modpackInformationReturn
+                {
+                    modpackDownloadRequired = false,
+                    mojangVersionDownloadRequired = minecraftVersionExists
+                };
+            }
+            else
+            {
+                // Version was not found
+                return new modpackInformationReturn
+                {
+                    modpackDownloadRequired = true,
+                    mojangVersionDownloadRequired = true
+                };
             }
         }
     }

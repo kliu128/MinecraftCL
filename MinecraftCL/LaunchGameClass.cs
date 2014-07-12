@@ -21,62 +21,6 @@ namespace MinecraftCL
         /// <returns></returns>
         public static string Launch(profileSelection profile, startGameVariables sGV)
         {
-            if (profile.VersionType == VersionType.Modpack)
-            {
-                // Register the correct version of minecraft and download modpack files if necessary.
-                ObservableCollection<Modpack> modpackList;
-                try
-                {
-                    XmlSerializer deserializer = new XmlSerializer(typeof(ObservableCollection<Modpack>));
-
-                    using (FileStream stream = File.OpenRead(System.Environment.CurrentDirectory + @"\.mcl\ModpackSettings.xml"))
-                    {
-                        modpackList = (ObservableCollection<Modpack>)deserializer.Deserialize(stream);
-                    }
-                }
-                catch (Exception e)
-                {
-                    return "Modpack information error: " + e;
-                }
-
-                Modpack packToValidate = new Modpack();
-                // Search through the modpack list to find the one specified by
-                // the profile.
-                foreach (var pack in modpackList)
-                {
-                    if (pack.name == profile.ModpackInfo.ID && pack.Type == profile.ModpackInfo.Type)
-                    {
-                        // This is the pack specified to launch
-                        packToValidate = pack;
-                        break;
-                    }
-                }
-
-                #region If pack is FTB public, launch and all that
-                if (packToValidate.Type == ModpackType.FeedTheBeastPublic)
-                {
-                    FTBModpack modpackToLaunch = packToValidate as FTBModpack;
-
-                    // Verify saved information from FTB public servers
-                    foreach (FTBModpack item in FTBLocations.PublicModpacks)
-                    {
-                        if (item.name == packToValidate.name)
-                        {
-                            // Located the modpack on ftb servers, validate info
-                            modpackToLaunch.url = item.url;
-                            modpackToLaunch.dir = item.dir;
-                            modpackToLaunch.repoVersion = item.repoVersion;
-                            break;
-                        }
-                    }
-                    // Check to see if the modpack has already been downloaded,
-                    // and if not, download the modpack
-
-                }
-                #endregion
-
-            }
-
             downloadVariables downloadVar = new downloadVariables
             {
                 mcInstallDir = sGV.InstallDir,
@@ -93,8 +37,7 @@ namespace MinecraftCL
                 return "Authentication Error: " + authenticationReturnString;
             }
             
-            // Get version information for the specified version of minecraft, and check if it needs to
-            // be downloaded.
+            // Get version information for the VANILLA version of minecraft, whether we're launching a modpack or not
             string versionInformationError;
             bool mcVersionExists = MinecraftUtils.getVersionInformation(ref sGV, out versionInformationError);
             if (versionInformationError != "")
@@ -126,6 +69,7 @@ namespace MinecraftCL
             else
             {
                 // The version already exists, launch game
+                startGame(profile, sGV);
             }
             
             return "success";
@@ -133,14 +77,16 @@ namespace MinecraftCL
 
         /// <summary>
         /// Starts the game/modpack, providing that the proper values have already been determined
-        /// (such as authToken, versionInfo, etc.)
+        /// (such as authToken, versionInfo, etc.). It also waits until Minecraft stops and returns
+        /// what happened.
         /// </summary>
         private static MinecraftCL.MinecraftUtils.startGameReturn startGame(profileSelection profile, startGameVariables sGV)
         {
             if (profile.VersionType == VersionType.Mojang)
             {
-
+                
             }
+            return new MinecraftUtils.startGameReturn();
         }
     }
 }

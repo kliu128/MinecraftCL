@@ -780,7 +780,7 @@ namespace MinecraftCL
                     // Add the version into the XML file
                     XDocument doc = XDocument.Load(mcInstallDir + "\\.mcl\\VersionInformation.xml");
                     XElement mcXMLValues = new XElement("version",
-                        new XAttribute("version", mcVersion),
+                        new XAttribute("version", mcVersion), new XAttribute("type", "MojangVanilla"), // TODO: change MojangVanilla to the modpack type
                         new XElement("mcAssetsVersion", mcAssetsVersion),
                         new XElement("minecraftLibraryList", minecraftArguments),
                         new XElement("mainClass", mcMainClass),
