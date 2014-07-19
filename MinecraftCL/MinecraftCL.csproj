@@ -128,6 +128,7 @@
     <Compile Include="FeedTheBeast\FTBLocations.cs" />
     <Compile Include="FeedTheBeast\FTBModpackClass.cs" />
     <Compile Include="GlobalVariableClass.cs" />
+    <Compile Include="KevinIncAnalyticsClass.cs" />
     <Compile Include="LaunchGameClass.cs" />
     <Compile Include="MessageWindow.xaml.cs">
       <DependentUpon>MessageWindow.xaml</DependentUpon>

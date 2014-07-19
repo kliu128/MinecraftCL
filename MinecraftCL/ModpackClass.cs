@@ -51,6 +51,8 @@ namespace MinecraftCL
         public virtual string author { get; set;}
         public virtual string mcVersion { get; set; }
         public virtual ModpackType Type { get; set; }
+        // Version can be "Recommended" for latest, or a specific version
+        public virtual string Version { get; set; }
         public string DisplayInformation
         {
             get
@@ -59,11 +61,12 @@ namespace MinecraftCL
                 {
                     return "Minecraft " + mcVersion + Environment.NewLine +
                            "Author: " + author + Environment.NewLine +
-                           "Type: " + Type + Environment.NewLine;
+                           "Version: " + Version + Environment.NewLine;
                 }
                 else
                 {
-                    return "Placeholder pack. Add your own!";
+                    return "Placeholder pack." + Environment.NewLine +
+                           "Add your own!";
                 }
             }
         }
@@ -97,12 +100,20 @@ namespace MinecraftCL
 
             if (versionInformationDoc.SelectSingleNode("/versions/modpacks/modpack[@type='" + pack.Type.ToFriendlyString() + "'][@name='" + pack.name + "']") != null)
             {
-                // Version exists, get version info
+                // The modpack exists
+
+                // Replace "Recommended" in the pack version with the latest version
                 XmlNode modpackNode = versionInformationDoc.SelectSingleNode("/versions/modpacks/modpack[@type='" + pack.Type.ToFriendlyString() + "'][@name='" + pack.name + "']");
+                
+                // Set the "version" to the vanilla minecraft version specified so getVersionInformation() can find the info
+                // for the vanilla version of minecraft
                 sGV.Version = modpackNode.SelectSingleNode("mcVersion").InnerText;
                 
                 string errorInformation;
                 bool minecraftVersionExists = MinecraftUtils.getVersionInformation(ref sGV, out errorInformation);
+
+                // Set the version to {$modpack-type}-{$modpack-name}
+                sGV.Version = modpackNode.Attributes["type"].Value + "-" + modpackNode.Attributes["name"].Value;
 
                 return new modpackInformationReturn
                 {

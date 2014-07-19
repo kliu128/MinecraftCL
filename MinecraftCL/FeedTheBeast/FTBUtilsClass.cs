@@ -76,12 +76,12 @@ namespace MinecraftCL.FeedTheBeast
                         // to determine what server to use.
                         if (double.Parse(curseBalanceJSON.repoSplitCurse, System.Globalization.CultureInfo.InvariantCulture) > r.NextDouble())
                         {
-                            // Balance has selected Automatic:CurseCDN
+                            DebugConsole.Print("Balance has selected Automatic:CurseCDN.", "FTBUtils.InitializeDLServers");
                             FTBLocations.SetMasterDownloadRepo(FTBLocations.CurseCDN);
                         }
                         else
                         {
-                            // Balance has selected Automatic:CreeperRepo
+                            DebugConsole.Print("Balance has selected Automatic:CreeperRepo.", "FTBUtils.InitializeDLServers");
                             FTBLocations.SetMasterDownloadRepo(FTBLocations.CreeperRepo);
                         }
                     }
@@ -156,6 +156,7 @@ namespace MinecraftCL.FeedTheBeast
                 // TODO: Make this non-random?
                 int randomMirrorIndex = new Random().Next(downloadMirrorList.Count);
                 FTBLocations.DownloadServer = downloadMirrorList[randomMirrorIndex];
+                DebugConsole.Print("InitializeDLServers() has selected " + FTBLocations.DownloadServer + " as mirror.", "FTBUtils.InitializeDLServers()");
                 return true;
             }
             // No internet connectivity, so obviously can't find download servers!

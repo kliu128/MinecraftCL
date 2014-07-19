@@ -371,6 +371,7 @@ namespace MinecraftCL
 
             XmlDocument doc = new XmlDocument();
             doc.Load(System.Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
+            // TODO: Redo this with LINQ or XPath
             foreach (XmlNode node in doc.SelectNodes("//version[@version]"))
             {
                 if (node.Attributes["version"].Value == sGV.Version)

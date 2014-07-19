@@ -44,10 +44,6 @@ namespace MinecraftCL
     /// </summary>
     public partial class MainWindow : Window
     {
-        /* MINECRAFTCL VERSION */
-        const double mCLVersion = 0.02;
-        /* ------------------- */
-
         bool usernameEntered = false;
         bool passwordEntered = false;
         string mcInstallDir = "";
@@ -231,10 +227,7 @@ namespace MinecraftCL
                             }
                         }
 
-                        Assembly executingAssembly = Assembly.GetExecutingAssembly();
-                        FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(executingAssembly.Location);
-
-                        if (Version.Parse(latestLauncherVersion) > Version.Parse(fvi.ProductVersion))
+                        if (Version.Parse(latestLauncherVersion) > Version.Parse(Globals.MinecraftCLVersion))
                         {
                             // A new version is available
                             ProcessStartInfo updaterStartInfo = new ProcessStartInfo();
