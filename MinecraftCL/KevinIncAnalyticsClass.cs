@@ -13,12 +13,13 @@ namespace MinecraftCL
         FTBModpackDownload,
         MojangMinecraftDownload,
         MinecraftAuthentication,
-        SelectFTBDownloadServer
+        SelectFTBDownloadServer,
+        MinecraftCLInitialization
     }
 
     public static class Analytics
     {
-        private static struct AnalyticsData
+        private struct AnalyticsData
 	    {
 		    public string MinecraftCLVersion;
             public TimingsMeasureType analyticsType;
@@ -31,6 +32,7 @@ namespace MinecraftCL
         private static Stopwatch MojangMinecraftDownloadStopwatch = new Stopwatch();
         private static Stopwatch MinecraftAuthenticationStopwatch = new Stopwatch();
         private static Stopwatch SelectFTBDownloadServerStopwatch = new Stopwatch();
+        private static Stopwatch MinecraftCLInitializationStopwatch = new Stopwatch();
         // TODO: Is there a better way than listing out all the stopwatches?
 
         public static void BeginTiming(TimingsMeasureType type)
@@ -49,6 +51,9 @@ namespace MinecraftCL
                     break;
                 case TimingsMeasureType.SelectFTBDownloadServer:
                     SelectFTBDownloadServerStopwatch.Start();
+                    break;
+                case TimingsMeasureType.MinecraftCLInitialization:
+                    MinecraftCLInitializationStopwatch.Start();
                     break;
                 default:
                     throw new NotImplementedException();
@@ -80,6 +85,11 @@ namespace MinecraftCL
                     analyticsTime = SelectFTBDownloadServerStopwatch.Elapsed;
                     break;
 
+                case TimingsMeasureType.MinecraftCLInitialization:
+                    MinecraftCLInitializationStopwatch.Stop();
+                    analyticsTime = MinecraftCLInitializationStopwatch.Elapsed;
+                    break;
+
                 default:
                     throw new NotImplementedException();
             }
@@ -93,12 +103,14 @@ namespace MinecraftCL
             {
                 try
                 {
+                    string analyticsURL = "http://mcdonecreative.dynu.net/MinecraftCL/analytics.php";
                     using (WebClient client = new WebClient())
                     {
                         foreach (AnalyticsData data in analyticsList)
                         {
                             // POST data to server
-                            client.UploadData("http://mcdonecreative.dynu.net/MinecraftCL/analytics.php", )
+                            client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
+                            string HtmlResult = client.UploadString(analyticsURL, "version=" + data.MinecraftCLVersion + "&type=" + Enum.GetName(typeof(TimingsMeasureType), data.analyticsType) + "&timespan=" + data.analyticsTime);
                         }
                     }
                 }

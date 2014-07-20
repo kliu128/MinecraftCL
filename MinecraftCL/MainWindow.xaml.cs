@@ -62,8 +62,20 @@ namespace MinecraftCL
         public WindowViewModel ViewModel = new WindowViewModel();
         public MainWindow()
         {
-            InitializeComponent();
             Globals.DebugOn = true;
+            Globals.SendAnalytics = true;
+
+            // Begin timing initialization of MainWindow()
+            Analytics.BeginTiming(TimingsMeasureType.MinecraftCLInitialization);
+
+            // Set up event for uploading analytics data to server when program exits
+            Application.Current.Exit += (o, x) =>
+                {
+                    Analytics.UploadToServer();
+                };
+
+            InitializeComponent();
+            
             DebugConsole.Print("Begin start of MinecraftCL MainWindow.xaml.cs at " + DateTime.Now + ".", "MainWindow");
 
             #region Internet Check
@@ -234,7 +246,7 @@ namespace MinecraftCL
                             updaterStartInfo.FileName = System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe";
                             updaterStartInfo.Arguments = latestLauncherVersion;
                             Process.Start(updaterStartInfo);    // Start updater with arguments
-                            Environment.Exit(0);
+                            this.Close();
                         }
                     }
                 }
@@ -315,6 +327,8 @@ namespace MinecraftCL
                     downloadErrorWindow.ShowDialog();
                 }
             }
+
+            Analytics.StopTiming(TimingsMeasureType.MinecraftCLInitialization);
         }
 
         public void Button_Click(object sender, RoutedEventArgs e)

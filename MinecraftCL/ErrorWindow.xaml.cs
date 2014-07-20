@@ -52,7 +52,7 @@ namespace MinecraftCL
             switch (startReturn.ReturnCode)
             {
                 case startMinecraftReturnCode.StartedMinecraft:
-                    Environment.Exit(0);
+                    Application.Current.Shutdown(0);
                     break;
                 case startMinecraftReturnCode.MinecraftError:
                     errorMessageBox.Text = startReturn.Error;
@@ -96,12 +96,6 @@ namespace MinecraftCL
 
             // Show download window
             downloaderVariables.DownloadDialog.ShowDialog();
-        }
-
-        private void Window_Closing(object sender, CancelEventArgs e)
-        {
-            // Not sure why the program doesn't exit at this point, seems this is necessary.
-            Environment.Exit(0);
         }
     }
 }

@@ -35,7 +35,7 @@ namespace MinecraftCL
                     "Closing the window will close the program and cause the download to be unfinished. You will need to revalidate minecraft files. Are you sure you want to cancel the download?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
                 if (stopDownloadResult == MessageBoxResult.Yes)
                 {
-                    Environment.Exit(0);
+                    Application.Current.Shutdown(0);
                 }
                 else
                 {
