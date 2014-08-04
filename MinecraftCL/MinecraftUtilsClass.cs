@@ -98,6 +98,9 @@ namespace MinecraftCL
             bool authenticationSuccess = true;
             if (Globals.HasInternetConnectivity == true)
             {
+                // Begin timing authentication
+                Analytics.BeginTiming(TimingsMeasureType.MinecraftAuthentication);
+
                 try
                 {
                     var responsePayload = "";
@@ -182,6 +185,10 @@ namespace MinecraftCL
                     }
                     authenticationSuccess = false;
                 }
+
+                // Stop timing authentication
+                Analytics.StopTiming(TimingsMeasureType.MinecraftAuthentication);
+
                 return authenticationSuccess;
             }
             else
@@ -197,8 +204,6 @@ namespace MinecraftCL
 
         public static startGameReturn Start(startGameVariables sGV)
         {
-            
-
             isRunning = true;
             string installPath = "";
             startMinecraftReturnCode returnCode = startMinecraftReturnCode.StartedMinecraft;
@@ -342,6 +347,41 @@ namespace MinecraftCL
             isRunning = false;
             return new startGameReturn { ReturnCode = returnCode, ProcessStartInfo = startInfo, Error = mcError };
         }
+        /// <summary>
+        /// Checks VersionInformation.xml and versions.json to see if the version must be downloaded.
+        /// True = Version exists
+        /// False = Version must be downloaded
+        /// </summary>
+        /// <param name="minecraftVersion"></param>
+        /// <param name="mcVersionDynamic"></param>
+        /// <returns></returns>
+        public static bool checkMinecraftExists(string minecraftVersion, dynamic mcVersionDynamic)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.Load(System.Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
+            if (doc.SelectSingleNode("//versions/version[@version='" + minecraftVersion + "']") != null)
+            {
+                if (mcVersionDynamic != null)
+                {
+                    // Check in mcVersionDynamic (version.json file) to see if the version needs to be redownloaded
+                    foreach (var item in mcVersionDynamic.versions)
+                    {
+                        if (item.id == minecraftVersion)
+                        {
+                            DateTime serverReleaseTime = DateTime.ParseExact(item.releaseTime, "yyyy'-'MM'-'dd'T'HH:mm:sszzz", null);
+                            DateTime savedDownloadTime = DateTime.Parse(doc.SelectSingleNode(@"//versions/version[@version='" + minecraftVersion + "']/savedReleaseTime").InnerText);
+                            if (serverReleaseTime > savedDownloadTime)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+            else
+                return false;
+        }
 
         public static bool getVersionInformation(ref startGameVariables sGV, out string errorInformation)
         {
@@ -369,52 +409,34 @@ namespace MinecraftCL
             string mcAssetsVersion = "";
             string startingArguments = "";
 
-            XmlDocument doc = new XmlDocument();
-            doc.Load(System.Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
-            // TODO: Redo this with LINQ or XPath
-            foreach (XmlNode node in doc.SelectNodes("//version[@version]"))
+            if (checkMinecraftExists(sGV.Version, sGV.mcVersionDynamic) == true)
             {
-                if (node.Attributes["version"].Value == sGV.Version)
-                {
-                    if (sGV.mcVersionDynamic != null)
-                    {
-                        // Search through mcVersionDynamic to check version updated time if it was able to be
-                        // downloaded.
-                        foreach (var item in sGV.mcVersionDynamic.versions)
-                        {
-                            if (item.id == sGV.Version)
-                            {
-                                DateTime serverReleaseTime = DateTime.ParseExact(item.releaseTime, "yyyy'-'MM'-'dd'T'HH:mm:sszzz", null);
-                                DateTime savedDownloadTime = DateTime.Parse(doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/savedReleaseTime").InnerText);
-                                if (serverReleaseTime > savedDownloadTime)
-                                {
-                                    errorInformation = "";
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                    versionExists = true;
-                    mcAssetsVersion = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/mcAssetsVersion").InnerText;
-                    sGV.MCLibraryArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/minecraftLibraryList").InnerText;
-                    sGV.MainClass = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/mainClass").InnerText;
-                    startingArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/startingArguments").InnerText;
-                    // Replace all of the various variables used with their actual values
-                    // TODO: Any better way to do this?
-                    startingArguments = startingArguments.Replace("${auth_player_name}", sGV.Username);
-                    startingArguments = startingArguments.Replace("${version_name}", sGV.Version);
-                    startingArguments = startingArguments.Replace("${game_directory}", "\"" + sGV.InstallDir + "\\.minecraft\"");
-                    startingArguments = startingArguments.Replace("${assets_root}", "\"" + sGV.InstallDir + "\\.minecraft\\assets\""); // For 1.7 and above
-                    startingArguments = startingArguments.Replace("${game_assets}", "\"" + sGV.InstallDir + "\\.minecraft\\assets\\virtual\\legacy\""); // For legacy versions 1.6.4 or below
-                    startingArguments = startingArguments.Replace("${assets_index_name}", mcAssetsVersion);
-                    startingArguments = startingArguments.Replace("${auth_uuid}", sGV.UUID);
-                    startingArguments = startingArguments.Replace("${auth_access_token}", sGV.AccessToken);
-                    startingArguments = startingArguments.Replace("${user_properties}", "{}"); // Yeah, no twitch here...
-                    startingArguments = startingArguments.Replace("${user_type}", sGV.userType);
-                    startingArguments = startingArguments.Replace("${auth_session}", sGV.AccessToken);
-                    sGV.StartingArguments = startingArguments;
-                }
+                // Version already exists
+                versionExists = true;
+
+                XmlDocument doc = new XmlDocument();
+                doc.Load(System.Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
+
+                mcAssetsVersion = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/mcAssetsVersion").InnerText;
+                sGV.MCLibraryArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/minecraftLibraryList").InnerText;
+                sGV.MainClass = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/mainClass").InnerText;
+                startingArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/startingArguments").InnerText;
+                // Replace all of the various variables used with their actual values
+                // TODO: Any better way to do this?
+                startingArguments = startingArguments.Replace("${auth_player_name}", sGV.Username);
+                startingArguments = startingArguments.Replace("${version_name}", sGV.Version);
+                startingArguments = startingArguments.Replace("${game_directory}", "\"" + sGV.InstallDir + "\\.minecraft\"");
+                startingArguments = startingArguments.Replace("${assets_root}", "\"" + sGV.InstallDir + "\\.minecraft\\assets\""); // For 1.7 and above
+                startingArguments = startingArguments.Replace("${game_assets}", "\"" + sGV.InstallDir + "\\.minecraft\\assets\\virtual\\legacy\""); // For legacy versions 1.6.4 or below
+                startingArguments = startingArguments.Replace("${assets_index_name}", mcAssetsVersion);
+                startingArguments = startingArguments.Replace("${auth_uuid}", sGV.UUID);
+                startingArguments = startingArguments.Replace("${auth_access_token}", sGV.AccessToken);
+                startingArguments = startingArguments.Replace("${user_properties}", "{}"); // Yeah, no twitch here...
+                startingArguments = startingArguments.Replace("${user_type}", sGV.userType);
+                startingArguments = startingArguments.Replace("${auth_session}", sGV.AccessToken);
+                sGV.StartingArguments = startingArguments;
             }
+
             errorInformation = "";
             return versionExists;
         }
@@ -450,7 +472,6 @@ namespace MinecraftCL
                 else
                 {
                     // If there is no specified file size, simply revalidate the file by redownloading it
-
                     webClient.DownloadFile(downloadLocation, saveLocation);
                     returnValue = 0;
                 }
@@ -483,6 +504,8 @@ namespace MinecraftCL
         {
             if (Globals.HasInternetConnectivity == true)
             {
+                Analytics.BeginTiming(TimingsMeasureType.MojangMinecraftDownload);
+
                 string mcAssetsVersion = "";
                 bool validateFiles = downloaderInfo.ValidateFiles;
                 string mcMainClass = "";
@@ -799,6 +822,7 @@ namespace MinecraftCL
                 DDialog.Dispatcher.BeginInvoke(
                     (Action)(() => { DDialog.Close(); }));
 
+                Analytics.StopTiming(TimingsMeasureType.MojangMinecraftDownload);
                 return "success"; // Return success in downloading
             }
             else

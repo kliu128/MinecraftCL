@@ -1,0 +1,12 @@
+﻿<Window x:Class="MinecraftCL.UnhandledExceptionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Unhandled Exception" Height="300" Width="372.103">
+    <Grid Margin="0,0,2,0">
+        <TextBox x:Name="exceptionDetailsBox" IsReadOnly="True" HorizontalAlignment="Left" Height="154" Margin="10,80,0,0" TextWrapping="Wrap" Text="...ok, WHAT? How is there an error in the thing that catches errors??!!" VerticalAlignment="Top" Width="342"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Uh oh! Seems we've got an unhandled exception. Unfortunately, we can't continue. You should probably tell us about this horrible error, so we can fix it." VerticalAlignment="Top" Height="65" Width="272"/>
+        <Image x:Name="errorIcon" HorizontalAlignment="Left" Height="80" Margin="277,0,0,0" Source="/Resources/ErrorIcon.png" VerticalAlignment="Top" Width="75"/>
+        <Button x:Name="sendDetailsButton" Click="sendDetailsButton_Click" Content="Send Details" HorizontalAlignment="Left" Margin="10,239,0,0" VerticalAlignment="Top" Width="342"/>
+
+    </Grid>
+</Window>

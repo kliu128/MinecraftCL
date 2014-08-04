@@ -121,6 +121,20 @@ namespace MinecraftCL
             }
         }
 
+        private bool _enableAnalytics;
+        public bool enableAnalytics
+        {
+            get
+            {
+                return _enableAnalytics;
+            }
+            set
+            {
+                _enableAnalytics = value;
+                OnPropertyChanged("enableAnalytics");
+            }
+        }
+
         public WindowViewModel()
         {
             profileCollection = new ObservableCollection<profileSelection>();

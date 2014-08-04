@@ -63,7 +63,6 @@ namespace MinecraftCL
         public MainWindow()
         {
             Globals.DebugOn = true;
-            Globals.SendAnalytics = true;
 
             // Begin timing initialization of MainWindow()
             Analytics.BeginTiming(TimingsMeasureType.MinecraftCLInitialization);
@@ -72,6 +71,16 @@ namespace MinecraftCL
             Application.Current.Exit += (o, x) =>
                 {
                     Analytics.UploadToServer();
+                };
+            
+            // Set up global exception handler
+            AppDomain currentAppDomain = AppDomain.CurrentDomain;
+            currentAppDomain.UnhandledException += (o, x) =>
+                {
+                    UnhandledExceptionWindow exceptionWindow = new UnhandledExceptionWindow();
+                    exceptionWindow.exceptionDetailsBox.Text = ((Exception)x.ExceptionObject).ToString();
+                    exceptionWindow.ShowDialog();
+                    Environment.Exit(1);
                 };
 
             InitializeComponent();
@@ -191,12 +200,15 @@ namespace MinecraftCL
             }
 
             // Set up FTB download servers and grab modpack list asynchronously
+            DownloadDialog dDialog = new DownloadDialog();
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += (o, x) =>
                 {
                     FTBLocations.DownloadServersInitialized = FTBUtils.InitializeDLServers();
                     Exception getModpackResult;
                     FTBLocations.PublicModpacks = FTBUtils.GetModpacks(out getModpackResult);
+
+                    //FTBUtils.DownloadModpack(FTBLocations.PublicModpacks[0], dDialog, System.Environment.CurrentDirectory + @"\ftb\");
                 };
             worker.RunWorkerAsync();
             #endregion
@@ -277,6 +289,12 @@ namespace MinecraftCL
                 // Load auto backup world setting
                 autoBackupWorlds = Convert.ToBoolean(settingsDoc.SelectSingleNode("/settings/AutoBackupWorlds").InnerText);
                 ViewModel.autoBackupWorlds = autoBackupWorlds;
+            }
+            if (settingsDoc.SelectSingleNode("/settings/EnableAnalytics") != null)
+            {
+                // Load Analytics setting
+                ViewModel.enableAnalytics = Convert.ToBoolean(settingsDoc.SelectSingleNode("/settings/EnableAnalytics").InnerText);
+                Globals.SendAnalytics = Convert.ToBoolean(settingsDoc.SelectSingleNode("/settings/EnableAnalytics").InnerText);
             }
             #endregion
 

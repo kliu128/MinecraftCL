@@ -207,9 +207,12 @@ namespace MinecraftCL
                 modpackSerializer.Serialize(writer, modpackList);
             }
 
-            // Save auto-backup worlds setting
+            #region Save settings to MinecraftCLSettings.xml
             XmlDocument settingsDoc = new XmlDocument();
             settingsDoc.Load(System.Environment.CurrentDirectory + "\\.mcl\\MinecraftCLSettings.xml");
+            XmlElement settingsDocRoot = settingsDoc.DocumentElement;
+
+            // Save auto-backup worlds setting
             if (settingsDoc.SelectSingleNode("/settings/AutoBackupWorlds") != null)
             {
                 // Node exists, we can simply update it
@@ -218,12 +221,26 @@ namespace MinecraftCL
             else
             {
                 // Node does not exist, create it and set its value
-                XmlElement settingsDocRoot = settingsDoc.DocumentElement;
                 XmlElement autoBackupWorldsElement = settingsDoc.CreateElement("AutoBackupWorlds");
                 autoBackupWorldsElement.InnerText = ViewModel.autoBackupWorlds.ToString();
                 settingsDocRoot.AppendChild(autoBackupWorldsElement);
             }
+
+            // Save Analytics settings
+            if (settingsDoc.SelectSingleNode("/settings/EnableAnalytics") != null)
+                // Node exists, update it
+                settingsDoc.SelectSingleNode("/settings/EnableAnalytics").InnerText = ViewModel.enableAnalytics.ToString();
+            else
+            {
+                // Node does not exist, create it and set its value
+                XmlElement enableAnalyticsElement = settingsDoc.CreateElement("EnableAnalytics");
+                enableAnalyticsElement.InnerText = ViewModel.autoBackupWorlds.ToString();
+                settingsDocRoot.AppendChild(enableAnalyticsElement);
+            }
+
             settingsDoc.Save(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml");
+            #endregion
+            Globals.SendAnalytics = ViewModel.enableAnalytics;
         }
 
         private void versionSelectBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

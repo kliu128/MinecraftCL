@@ -124,6 +124,7 @@
     <Compile Include="ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ExtensionMethods.cs" />
     <Compile Include="FeedTheBeast\FTBUtilsClass.cs" />
     <Compile Include="FeedTheBeast\FTBLocations.cs" />
     <Compile Include="FeedTheBeast\FTBModpackClass.cs" />
@@ -141,6 +142,9 @@
     </Compile>
     <Compile Include="MinecraftUtilsClass.cs" />
     <Compile Include="StringCipher.cs" />
+    <Compile Include="UnhandledExceptionWindow.xaml.cs">
+      <DependentUpon>UnhandledExceptionWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WindowViewModel.cs" />
     <Page Include="AddModpackWindow.xaml">
       <SubType>Designer</SubType>
@@ -170,6 +174,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="SettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UnhandledExceptionWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -229,12 +237,14 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <EmbeddedResource Include="Resources\Minecraft_Cake_16.ico" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Minecraft_Cake_32.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\ErrorIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />

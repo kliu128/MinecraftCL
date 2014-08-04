@@ -97,6 +97,9 @@ namespace MinecraftCL
             analyticsList.Add(new AnalyticsData { MinecraftCLVersion = Globals.MinecraftCLVersion, analyticsType = type, analyticsTime = analyticsTime } );
         }
 
+        /// <summary>
+        /// Uploads gathered analytic data to the server, if enabled.
+        /// </summary>
         public static void UploadToServer()
         {
             if (Globals.SendAnalytics)

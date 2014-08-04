@@ -187,15 +187,43 @@ namespace MinecraftCL.FeedTheBeast
             }
         }
 
+        private class FTBLibrary
+        {
+            public string name { get; set; }
+        }
+
+        private class FTBPackJSON
+        {
+            public string minecraftArguments { get; set; }
+            public List<FTBLibrary> libraries { get; set; }
+            public string mainClass { get; set; }
+            public string id { get; set; }
+        }
+
+        /// <summary>
+        /// Downloads and saves the modpack with the FTB save format. (one change: natives are saved in /$version/$version-natives/ instead of /natives/, like vanilla minecraft)
+        /// </summary>
+        /// <param name="download"></param>
+        /// <param name="dDialog"></param>
+        /// <param name="installDir"></param>
+        /// <returns></returns>
         public static bool DownloadModpack(FTBModpack download, DownloadDialog dDialog, string installDir)
         {
             if (Globals.HasInternetConnectivity)
             {
+                // Begin timing FTB modpack download
+                Analytics.BeginTiming(TimingsMeasureType.FTBModpackDownload);
+
+                bool downloadFinished = false;
+                bool downloadSuccess;
                 try
                 {
                     dDialog.Dispatcher.BeginInvoke((Action)delegate
                     {
                         dDialog.downloadProgressBar.Visibility = System.Windows.Visibility.Visible;
+                        dDialog.downloadIsInProgress = true;
+                        dDialog.downloadProgressBar.Minimum = 1;
+                        dDialog.downloadProgressBar.Maximum = 100;
                         dDialog.Show();
                     });
 
@@ -213,21 +241,64 @@ namespace MinecraftCL.FeedTheBeast
                         };
                     client.DownloadDataCompleted += (o, x) =>
                         {
+                            // Extract zip file to install directory
                             MemoryStream modpackStream = new MemoryStream();
                             byte[] modpackZipByteArray = x.Result;
                             modpackStream.Write(modpackZipByteArray, 0, modpackZipByteArray.Length);
-                            ZipFile modpackZip = ZipFile.Read(modpackStream);
-                            modpackZip.ExtractAll(installDir, ExtractExistingFileAction.OverwriteSilently);
+                            modpackStream.Flush();
+                            modpackStream.Position = 0;
+                            using (ZipFile modpackZip = ZipFile.Read(modpackStream))
+                            {
+                                // Extract each file individually, and keep a running percentage of entries extracted / total entries
+                                // to get a psuedo-percentage of extraction progress.
+                                int entriesExtracted = 0;
+                                foreach (ZipEntry file in modpackZip)
+                                {
+                                    file.Extract(installDir, ExtractExistingFileAction.OverwriteSilently);
+                                    entriesExtracted++;
+                                    double percentComplete = (double)entriesExtracted / ((double)modpackZip.Entries.Count) * 100;
+
+                                    dDialog.Dispatcher.BeginInvoke((Action)delegate
+                                        {
+                                            dDialog.downloadFileDisplay.Text = "Extracting " + download.url + "... " + Math.Round(percentComplete, 0) + "% extracted.";
+                                            dDialog.downloadProgressBar.Value = percentComplete;
+                                        });
+                                }
+                            }
+
+                            // Rename the "/minecraft/" folder to the modpack's name
+                            Directory.Move(installDir + @"\minecraft\", installDir + @"\" + download.name);
+
+                            // Download the vanilla natives and jar
+                            /*startGameVariables sGV = new startGameVariables {n}
+                            bool versionExists = MinecraftUtils.getVersionInformation(*/
+
+                            // Read out pack.json from the modpack zip file
+                            string packJSON = File.ReadAllText(installDir + @"\" + download.name + @"\pack.json");
+                            FTBPackJSON packJSONClass = JsonConvert.DeserializeObject<FTBPackJSON>(packJSON);
+
+                            // Parse pack.json class
+                            
+
+                            // Stop timing ftb modpack download
+                            Analytics.StopTiming(TimingsMeasureType.FTBModpackDownload);
+                            downloadFinished = true;
                         };
                     
                     // Download the modpack zip file
                     client.DownloadDataAsync(new Uri(FTBLocations.MasterDownloadRepo + FTBLocations.FTB2 + "modpacks/" + download.dir + "/" + download.repoVersion + "/" + download.url));
-                    return true;
+                    downloadSuccess = true;
                 }
                 catch (WebException)
                 {
-                    return false;
+                    downloadSuccess = false;
                 }
+
+                // Wait for the download and processing to finish before returning
+                while(downloadFinished == false)
+                { }
+
+                return downloadSuccess;
             }
             else
             {
