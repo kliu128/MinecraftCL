@@ -347,6 +347,7 @@ namespace MinecraftCL
             isRunning = false;
             return new startGameReturn { ReturnCode = returnCode, ProcessStartInfo = startInfo, Error = mcError };
         }
+
         /// <summary>
         /// Checks VersionInformation.xml and versions.json to see if the version must be downloaded.
         /// True = Version exists
@@ -557,7 +558,7 @@ namespace MinecraftCL
                     }
                     else
                     {
-                        throw new WebException("Error during download of *mcVersion*/*mcVersion*.json.", w);
+                        throw new WebException("Error during download of " + mcVersion + "/" + mcVersion + ".json.", w);
                     }
                 }
                 string versionInformation;
@@ -584,93 +585,22 @@ namespace MinecraftCL
 
                 var checkMcLibraries = new JavaScriptSerializer().Deserialize<IEnumerable<Library>>(mcLibraryValues);
                 // Downloads libraries if they are not present
-                string libraryLocation = "";
                 List<string> downloadedLibraryLocations = new List<string>();
                 List<downloadLibraryClass> mcDownloadLibraries = new List<downloadLibraryClass>();
 
-                foreach (var check in checkMcLibraries)
+                foreach (var library in checkMcLibraries)
                 {
-                    bool addDownload = false;
-                    bool extractNative = false;
-                    string downloadType = "";
-                    if (check.rules != null)
+                    string libraryLocation;
+                    bool libraryDownloaded = DownloadLibrary(library, mcInstallDir, validateFiles, DDialog, mcVersion, out libraryLocation);
+                    if (libraryDownloaded == true)
                     {
-                        if (check.rules[0].action == "allow")
-                        {
-                            if (check.rules[0].os == null) // Is this library allowed on all systems?
-                            {
-                                addDownload = true;
-                            }
-                            else if (check.rules[0].os.name == "windows") // If not, is this library allowed on windows?
-                            {
-                                addDownload = true;
-                            }
-                            else
-                            {
-                                // If neither of these prove true, then don't download the library, as it is not meant to be downloaded on a windows system
-                                addDownload = false;
-                            }
-                        }
-                        if (check.rules.Count >= 2)
-                        {
-                            if (check.rules[1].action == "disallow")
-                            {
-                                if (check.rules[1].os.name == "windows")
-                                {
-                                    // Don't add this, it is disallowed on windows systems
-                                    addDownload = false;
-                                }
-                                else
-                                {
-                                    // It's denied on some other system, download it
-                                    addDownload = true;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // No rules on downloading, add it to the list
-                        addDownload = true;
-                    }
-
-                    // Get the architecture, if it is required
-                    if (check.natives != null)
-                    {
-                        downloadType = check.natives.windows;
-                    }
-
-                    // See if it needs to be extracted
-                    if (check.extract != null)
-                        extractNative = true;
-
-                    // if this should be added on windows, add the download to the list
-                    if (addDownload == true)
-                    {
-                        if (downloadType.Contains("${arch}"))
-                        {
-                            // Replace the ${arch} in the download type with the actual architecture of the system,
-                            // if ${arch} is found
-                            if (System.Environment.Is64BitOperatingSystem == true)
-                            {
-                                // Processor type is x64, download the 64 bit library
-                                downloadType = downloadType.Replace("${arch}", "64");
-                            }
-                            else
-                            {
-                                // Processor type is x32, download the 32 bit library
-                                downloadType = downloadType.Replace("${arch}", "32");
-                            }
-                        }
-
-                        mcDownloadLibraries.Add(new downloadLibraryClass
-                        {
-                            Name = check.name,
-                            DownloadType = downloadType,
-                            ExtractNative = extractNative
-                        });
+                        string currentDownloadType = "";
+                        if (library.natives != null)
+                            currentDownloadType = library.natives.windows;
+                        downloadedLibraryLocations.Add("%mcInstallDir%" + libraryLocation);
                     }
                 }
+                /*
                 foreach (var item in mcDownloadLibraries)
                 {
                     // Download the libraries and extract them if needed
@@ -720,9 +650,8 @@ namespace MinecraftCL
                         {
                             System.IO.Directory.Delete(mcInstallDir + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\META-INF\\", true);
                         }
-                    }
-                    downloadedLibraryLocations.Add("%mcInstallDir%" + libraryLocation + currentDownloadType + ".jar");
-                }
+                    }*/
+                
 
 
                 #endregion
@@ -835,6 +764,171 @@ namespace MinecraftCL
             }
             #endregion
         }
+        /// <summary>
+        /// Checks and downloads a single library from the minecraft servers.
+        /// Will only download if necessary on that system.
+        /// Also, comments. ALL THE COMMENTS EVER.
+        /// (is heavily commented)
+        /// </summary>
+        /// <param name="libraryClass"></param>
+        /// <param name="downloadLocation"></param>
+        /// <param name="validateFiles"></param>
+        /// <param name="DDialog"></param>
+        /// <param name="mcVersion"></param>
+        private static bool DownloadLibrary(Library libraryClass, string downloadLocation, bool validateFiles, DownloadDialog DDialog, string mcVersion, out string libraryLocation)
+        {
+            bool addDownload = false;
+            bool extractNative = false;
+            string downloadType = "";
+            libraryLocation = null;
+
+            #region Check to see if the library needs to be downloaded on Windows
+            if (libraryClass.rules != null)
+            {
+                // Check the rules for downloading the library
+                // and make sure it can be downloaded on windows
+                // if addDownload = true, then download it.
+                if (libraryClass.rules[0].action == "allow")
+                {
+                    // Is allowed on some systems, let's see what systems it is allowed on
+                    if (libraryClass.rules[0].os == null)
+                    {
+                        // It is allowed on all systems, download it
+                        addDownload = true;
+                    }
+                    else if (libraryClass.rules[0].os.name == "windows")
+                    {
+                        // It is allowed on "windows", download it
+                        addDownload = true;
+                    }
+                    else
+                    {
+                        // If neither of these prove true, then don't download the library, as it is not meant to be downloaded on a windows system
+                        addDownload = false;
+                    }
+                }
+                if (libraryClass.rules.Count >= 2)
+                {
+                    /* There is another rule, such as:
+                     *
+                     * "rules": [
+                     * {
+                     *    "action": "allow"
+                     *  },
+                     *  {
+                     *    "action": "disallow", <-- Second rule to be tested
+                     *    "os": {
+                     *    "name": "osx",
+                     *    "version": "^10\\.5\\.\\d$"
+                     *  }
+                     * }
+                     */
+
+                    if (libraryClass.rules[1].action == "disallow")
+                    {
+                        // The second rule disallows this library on some systems, let's see what systems it's denied on
+                        if (libraryClass.rules[1].os.name == "windows")
+                        {
+                            // "disallowed" on "windows", we should not download this library
+                            addDownload = false;
+                        }
+                        else
+                        {
+                            // The library is not disallowed on windows, download it
+                            addDownload = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // No rules are specified, we should download it
+                addDownload = true;
+            }
+            #endregion
+
+            // Get the architecture, if it is required
+            if (libraryClass.natives != null)
+            {
+                // Architecture may be "natives-windows",
+                // or maybe "natives-windows-{$arch}" if there is a
+                // specific architecture.
+                downloadType = libraryClass.natives.windows;
+            }
+
+            // See if it needs to be extracted
+            if (libraryClass.extract != null)
+                extractNative = true;
+
+            // Download the library, if everything checks out
+            if (addDownload == true)
+            {
+                if (downloadType.Contains("${arch}"))
+                {
+                    // Replace the ${arch} in the download type with the actual architecture of the system,
+                    // if ${arch} is found
+                    if (System.Environment.Is64BitOperatingSystem == true)
+                    {
+                        // Processor type is x64, download the 64 bit library
+                        downloadType = downloadType.Replace("${arch}", "64");
+                    }
+                    else
+                    {
+                        // Processor type is x32, download the 32 bit library
+                        downloadType = downloadType.Replace("${arch}", "32");
+                    }
+                }
+
+                string[] libraryDownloadURL = libraryClass.name.Split(':');
+
+                // The jar name of the library. Ex. "lwjgl-2.9.1-nightly-20131120.jar"
+                string libraryJarName = libraryDownloadURL[1] + "-" + libraryDownloadURL[2] + downloadType + ".jar";
+
+                // The URL of the library to download it from. Ex. 
+                // https://libraries.minecraft.net/org/lwjgl/lwjgl/lwjgl-platform/2.9.1-nightly-20130708-debug3/lwjgl-platform-2.9.1-nightly-20130708-debug3-natives-osx.jar
+                string libraryDownloadPath = "https://libraries.minecraft.net/" + libraryDownloadURL[0].Replace('.', '/') + "/" + libraryDownloadURL[1] + "/" + libraryDownloadURL[2] + "/" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2];
+                
+                // Where to save the library. Ex.
+                // C:\MinecraftCL\.minecraft\libraries\org\lwjgl\lwjgl\lwjgl\2.9.1-nightly-20131120
+                string librarySavePath = downloadLocation + @"\.minecraft\libraries\" + libraryDownloadURL[0].Replace('.', '\\') + "\\" + libraryDownloadURL[1] + "\\" + libraryDownloadURL[2] + "\\" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2];
+
+                // The full path of the library starting from the .minecraft folder, once saved.
+                // Ex. "\.minecraft\libraries\org\lwjgl\lwjgl\lwjgl\2.9.1-nightly-20131120\lwjgl-2.9.1-nightly-20131120.jar"
+                libraryLocation = @"\.minecraft\libraries\" + libraryDownloadURL[0].Replace('.', '\\') + "\\" + libraryDownloadURL[1] + "\\" + libraryDownloadURL[2] + "\\" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2] + downloadType + ".jar";
+
+                // Download the library
+                downloadFile(libraryDownloadPath + downloadType + ".jar", librarySavePath + downloadType + ".jar", validateFiles, "Downloading library... " + libraryJarName, DDialog);
+                
+                // Extract library if needed to natives folder
+                if (extractNative == true)
+                {
+                    // Display extraction information on download dialog
+                    DDialog.downloadFileDisplay.Dispatcher.BeginInvoke(
+                        (Action)(() => { DDialog.downloadFileDisplay.Text = "Extracting native library for Minecraft " + mcVersion + "... " + libraryJarName; }));
+
+                    if (!System.IO.Directory.Exists(downloadLocation + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\"))
+                    {
+                        // If the natives folder does not exist (eg. \.minecraft\versions\1.7.10\1.7.10-natives\),
+                        // create it
+                        System.IO.Directory.CreateDirectory(downloadLocation + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\");
+                    }
+
+                    using (ZipFile libraryJar = ZipFile.Read(librarySavePath + downloadType + ".jar"))
+                    {
+                        // Extract all files in the library jar (except for META-INF)
+                        foreach (ZipEntry entry in libraryJar)
+                        {
+                            if (entry.FileName != "META-INF")
+                                // Do not extract the META-INF folder, it is just metadata for the jar file.
+                                // Extract everything else.
+                                entry.Extract(downloadLocation + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\", ExtractExistingFileAction.OverwriteSilently);
+                        }
+                    }
+                }
+            }
+
+            return addDownload;
+        }
 
         #region JSON Classes
         private class Os
@@ -877,14 +971,56 @@ namespace MinecraftCL
         }
 
         #endregion
-
-        #region Information to Download Library Class
-        private class downloadLibraryClass
-        {
-            public string Name { get; set; }
-            public string DownloadType { get; set; }
-            public bool ExtractNative { get; set; }
-        }
-        #endregion
     }
+
+    #region Information to Download Library Class
+    public class downloadLibraryClass
+    {
+        public string Name { get; set; }
+        public string DownloadType { get; set; }
+        public bool ExtractNative { get; set; }
+    }
+    #endregion
+
+    #region JSON Classes
+    public class Os
+    {
+        public string name { get; set; }
+        public string version { get; set; }
+    }
+
+    public class Rule
+    {
+        public string action { get; set; }
+        public Os os { get; set; }
+    }
+
+    public class Natives
+    {
+        public string linux { get; set; }
+        public string windows { get; set; }
+        public string osx { get; set; }
+    }
+
+    public class Extract
+    {
+        public List<string> exclude { get; set; }
+    }
+
+    public class Library
+    {
+        public string name { get; set; }
+        public List<Rule> rules { get; set; }
+        public Natives natives { get; set; }
+        public Extract extract { get; set; }
+    }
+
+    public class Asset
+    {
+        public string name { get; set; }
+        public string hash { get; set; }
+        public string size { get; set; }
+    }
+
+    #endregion
 }

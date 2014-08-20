@@ -1,33 +1,17 @@
-﻿using Ionic.Zip;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using MinecraftCL.FeedTheBeast;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Configuration;
 using System.Diagnostics;
-using System.Dynamic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Web.Helpers;
-using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Media;
-using System.Windows.Threading;
 using System.Xml;
-using System.Xml.Linq;
-using MinecraftCL.FeedTheBeast;
 using System.Xml.Serialization;
-using System.Runtime.Serialization;
 
 namespace MinecraftCL
 {
@@ -207,8 +191,6 @@ namespace MinecraftCL
                     FTBLocations.DownloadServersInitialized = FTBUtils.InitializeDLServers();
                     Exception getModpackResult;
                     FTBLocations.PublicModpacks = FTBUtils.GetModpacks(out getModpackResult);
-
-                    //FTBUtils.DownloadModpack(FTBLocations.PublicModpacks[0], dDialog, System.Environment.CurrentDirectory + @"\ftb\");
                 };
             worker.RunWorkerAsync();
             #endregion
@@ -347,6 +329,8 @@ namespace MinecraftCL
             }
 
             Analytics.StopTiming(TimingsMeasureType.MinecraftCLInitialization);
+
+            FTBUtils.DownloadModpack(FTBLocations.PublicModpacks[0], dDialog, System.Environment.CurrentDirectory + @"\ftb\", mcVersionDynamic);
         }
 
         public void Button_Click(object sender, RoutedEventArgs e)

@@ -195,7 +195,7 @@ namespace MinecraftCL.FeedTheBeast
         private class FTBPackJSON
         {
             public string minecraftArguments { get; set; }
-            public List<FTBLibrary> libraries { get; set; }
+            public List<Library> libraries { get; set; }
             public string mainClass { get; set; }
             public string id { get; set; }
         }
@@ -207,7 +207,7 @@ namespace MinecraftCL.FeedTheBeast
         /// <param name="dDialog"></param>
         /// <param name="installDir"></param>
         /// <returns></returns>
-        public static bool DownloadModpack(FTBModpack download, DownloadDialog dDialog, string installDir)
+        public static bool DownloadModpack(FTBModpack download, DownloadDialog dDialog, string installDir, dynamic mcVersionDynamic)
         {
             if (Globals.HasInternetConnectivity)
             {
@@ -270,15 +270,22 @@ namespace MinecraftCL.FeedTheBeast
                             Directory.Move(installDir + @"\minecraft\", installDir + @"\" + download.name);
 
                             // Download the vanilla natives and jar
-                            /*startGameVariables sGV = new startGameVariables {n}
-                            bool versionExists = MinecraftUtils.getVersionInformation(*/
+                            bool versionExists = MinecraftUtils.checkMinecraftExists(download.mcVersion, mcVersionDynamic);
+                            if (versionExists == false)
+                            {
+                                downloadVariables downloadGameVariables = new downloadVariables { DownloadDialog = dDialog, mcInstallDir = installDir, ValidateFiles = false, mcVersion = download.mcVersion };
+                                MinecraftUtils.DownloadGame(downloadGameVariables);
+                            }
 
                             // Read out pack.json from the modpack zip file
                             string packJSON = File.ReadAllText(installDir + @"\" + download.name + @"\pack.json");
                             FTBPackJSON packJSONClass = JsonConvert.DeserializeObject<FTBPackJSON>(packJSON);
 
                             // Parse pack.json class
-                            
+                            foreach (var library in packJSONClass.libraries)
+                            {
+                                
+                            }
 
                             // Stop timing ftb modpack download
                             Analytics.StopTiming(TimingsMeasureType.FTBModpackDownload);
