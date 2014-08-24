@@ -6,11 +6,18 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
 
 namespace MinecraftCL
 {
+    public static struct LaunchGameReturn
+    {
+        public string returnInfo;
+        public startGameReturn startReturn;
+    }
+
     public static class LaunchGame
     {
         /// <summary>
@@ -61,7 +68,8 @@ namespace MinecraftCL
                         if (downloadReturn == "success")
                         {
                             mcVersionExists = MinecraftUtils.getVersionInformation(ref sGV, out versionInformationError);
-                            startGame(profile, sGV);
+                            startGameReturn startReturn = MinecraftUtils.Start(sGV);
+                            return new LaunchGameReturn { returnInfo = "Downloaded&AttemptedStart", startReturn = startReturn };
                         }
                     };
                 worker.RunWorkerAsync();
@@ -69,24 +77,9 @@ namespace MinecraftCL
             else
             {
                 // The version already exists, launch game
-                startGame(profile, sGV);
+                startGameReturn startReturn = MinecraftUtils.Start(sGV);
+                return new LaunchGameReturn { returnInfo = "AttemptedStart", startReturn = startReturn };
             }
-            
-            return "success";
-        }
-
-        /// <summary>
-        /// Starts the game/modpack, providing that the proper values have already been determined
-        /// (such as authToken, versionInfo, etc.). It also waits until Minecraft stops and returns
-        /// what happened.
-        /// </summary>
-        private static MinecraftCL.MinecraftUtils.startGameReturn startGame(profileSelection profile, startGameVariables sGV)
-        {
-            if (profile.VersionType == VersionType.Mojang)
-            {
-                
-            }
-            return new MinecraftUtils.startGameReturn();
         }
     }
 }

@@ -56,6 +56,13 @@ namespace MinecraftCL
         MinecraftError
     }
 
+    public struct startGameReturn
+    {
+        public startMinecraftReturnCode ReturnCode;
+        public ProcessStartInfo ProcessStartInfo;
+        public string Error;
+    }
+
     public static class MinecraftUtils
     {
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -81,13 +88,6 @@ namespace MinecraftCL
 
                 return request;
             }
-        }
-
-        public struct startGameReturn
-        {
-            public startMinecraftReturnCode ReturnCode;
-            public ProcessStartInfo ProcessStartInfo;
-            public string Error;
         }
 
         public static bool isRunning { get; set; }
@@ -201,7 +201,11 @@ namespace MinecraftCL
                 return true;
             }
         }
-
+        /// <summary>
+        /// Starts the game/modpack, providing that the proper values have already been determined
+        /// (such as authToken, versionInfo, etc.). It also waits until Minecraft stops and returns
+        /// what happened.
+        /// </summary>
         public static startGameReturn Start(startGameVariables sGV)
         {
             isRunning = true;
