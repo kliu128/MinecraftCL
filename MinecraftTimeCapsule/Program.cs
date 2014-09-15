@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MinecraftCL;
+using MinecraftLaunchLibrary;
 
 namespace MinecraftTimeCapsule
 {
@@ -12,6 +12,10 @@ namespace MinecraftTimeCapsule
         static void Main(string[] args)
         {
 
+            startGameVariables sGV = new startGameVariables
+            {
+                
+            };
         }
     }
 }

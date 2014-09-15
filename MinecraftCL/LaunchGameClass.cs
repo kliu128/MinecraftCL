@@ -31,12 +31,12 @@ namespace MinecraftCL
     public static class LaunchGame
     {
         /// <summary>
-        /// Launches minecraft and handles all errors.
+        /// Downloads Minecraft if necessary, and then starts Minecraft.
         /// </summary>
         /// <param name="profile"></param>
         /// <param name="sGV"></param>
         /// <returns></returns>
-        public static LaunchGameReturn Launch(profileSelection profile, startGameVariables sGV)
+        public static LaunchGameReturn BeginLaunch(profileSelection profile, startGameVariables sGV)
         {
             downloadVariables downloadVar = new downloadVariables
             {
@@ -51,14 +51,14 @@ namespace MinecraftCL
             if (authReturn == false)
             {
                 // authentication failed
-                return new LaunchGameReturn { returnInfo = authenticationReturnString, returnType = LaunchReturnType.AuthenticationError;
+                return new LaunchGameReturn { returnInfo = authenticationReturnString, returnType = LaunchReturnType.AuthenticationError };
             }
             
             // Get version information for the VANILLA version of minecraft, whether we're launching a modpack or not
             string versionInformationError;
             bool mcVersionExists = MinecraftUtils.getVersionInformation(ref sGV, out versionInformationError);
             if (versionInformationError != "")
-                return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError;
+                return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
 
             if (!mcVersionExists)
             {
@@ -78,18 +78,7 @@ namespace MinecraftCL
 
                         if (downloadReturn == "success")
                         {
-                            mcVersionExists = MinecraftUtils.getVersionInformation(ref sGV, out versionInformationError);
-                            startGameReturn startReturn = MinecraftUtils.Start(sGV);
-                            switch (startReturn.ReturnCode)
-	                        {
-                                case startMinecraftReturnCode.MinecraftError:
-                                    gameReturn = new LaunchGameReturn { returnInfo = startReturn.Error, returnType = LaunchReturnType.MinecraftError};
-                                    break;
-                                case startMinecraftReturnCode.CouldNotLocateJava:
-                                    gameReturn
-		                        default:
-                                   break;
-	                        }
+                            StartGame(profile, sGV);
                         }
                     };
                 worker.RunWorkerAsync();
@@ -121,43 +110,55 @@ namespace MinecraftCL
 
                 startGameReturn startReturn = MinecraftUtils.Start(sGV);
                 #region Save Settings (Username, Password, Last used profile)
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml");
-            XmlElement xDocRoot = xDoc.DocumentElement;
-            // Save username
-            if (xDoc.SelectSingleNode("/settings/Username") == null)
-            {
-                XmlElement usernameElement = xDoc.CreateElement("Username");
-                usernameElement.InnerText = sGV.Username;
-                xDocRoot.AppendChild(usernameElement);
-            }
-            else
-                xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.Username;
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.Load(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml");
+                XmlElement xDocRoot = xDoc.DocumentElement;
+                // Save username
+                if (xDoc.SelectSingleNode("/settings/Username") == null)
+                {
+                    XmlElement usernameElement = xDoc.CreateElement("Username");
+                    usernameElement.InnerText = sGV.Username;
+                    xDocRoot.AppendChild(usernameElement);
+                }
+                else
+                    xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.Username;
 
-            // Save password
-            if (xDoc.SelectSingleNode("/settings/Password") == null)
-            {
-                XmlElement passwordElement = xDoc.CreateElement("Password");
-                passwordElement.InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
-                xDocRoot.AppendChild(passwordElement);
-            }
-            else
-                xDoc.SelectSingleNode("/settings/Password").InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
+                // Save password
+                if (xDoc.SelectSingleNode("/settings/Password") == null)
+                {
+                    XmlElement passwordElement = xDoc.CreateElement("Password");
+                    passwordElement.InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
+                    xDocRoot.AppendChild(passwordElement);
+                }
+                else
+                    xDoc.SelectSingleNode("/settings/Password").InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
 
-            // Save last used profile
-            if (xDoc.SelectSingleNode("/settings/LastUsedProfile") == null)
-            {
-                XmlElement lastUsedProfileElement = xDoc.CreateElement("LastUsedProfile");
-                lastUsedProfileElement.InnerText = sGV.LastUsedProfile;
-                xDocRoot.AppendChild(lastUsedProfileElement);
-            }
-            else
-                xDoc.SelectSingleNode("/settings/LastUsedProfile").InnerText = sGV.LastUsedProfile;
+                // Save last used profile
+                if (xDoc.SelectSingleNode("/settings/LastUsedProfile") == null)
+                {
+                    XmlElement lastUsedProfileElement = xDoc.CreateElement("LastUsedProfile");
+                    lastUsedProfileElement.InnerText = sGV.LastUsedProfile;
+                    xDocRoot.AppendChild(lastUsedProfileElement);
+                }
+                else
+                    xDoc.SelectSingleNode("/settings/LastUsedProfile").InnerText = sGV.LastUsedProfile;
 
-            xDoc.Save(System.Environment.CurrentDirectory + "//.mcl//MinecraftCLSettings.xml");
-            #endregion
-                return new LaunchGameReturn { returnInfo = "AttemptedStart", startReturn = startReturn };
+                xDoc.Save(System.Environment.CurrentDirectory + "//.mcl//MinecraftCLSettings.xml");
+                #endregion
+                return new LaunchGameReturn { returnInfo = "AttemptedStart", returnType = startReturn };
             }
+        }
+
+
+        /// <summary>
+        /// Authenticates, grabs version information, and launches the game.
+        /// </summary>
+        /// <param name="profile"></param>
+        /// <param name="sGV"></param>
+        /// <returns></returns>
+        public static LaunchGameReturn StartGame(profileSelection profile, startGameVariables sGV)
+        {
+            
         }
     }
 }
