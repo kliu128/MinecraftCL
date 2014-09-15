@@ -118,9 +118,6 @@
     </Compile>
     <Compile Include="DebugConsoleClass.cs" />
     <Compile Include="DirectoryCopy.cs" />
-    <Compile Include="DownloadDialog.xaml.cs">
-      <DependentUpon>DownloadDialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
     </Compile>
@@ -140,17 +137,12 @@
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MinecraftUtilsClass.cs" />
     <Compile Include="StringCipher.cs" />
     <Compile Include="UnhandledExceptionWindow.xaml.cs">
       <DependentUpon>UnhandledExceptionWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="WindowViewModel.cs" />
     <Page Include="AddModpackWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="DownloadDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -245,6 +237,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\ErrorIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MinecraftLaunchLibrary\MinecraftLaunchLibrary.csproj">
+      <Project>{a87fa9f3-115a-44b7-a2f4-65eed42d9d70}</Project>
+      <Name>MinecraftLaunchLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />

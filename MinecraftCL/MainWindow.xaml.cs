@@ -15,14 +15,6 @@ using System.Xml.Serialization;
 
 namespace MinecraftCL
 {
-    public struct downloadVariables
-    {
-        public string mcVersion;
-        public string mcInstallDir;
-        public bool ValidateFiles;
-        public DownloadDialog DownloadDialog;
-    }
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>

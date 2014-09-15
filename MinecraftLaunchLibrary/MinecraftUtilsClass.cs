@@ -23,9 +23,15 @@ using System.Xml.Linq;
 
 
 
-namespace MinecraftCL
+namespace MinecraftLaunchLibrary
 {
-
+    public struct downloadVariables
+    {
+        public string mcVersion;
+        public string mcInstallDir;
+        public bool ValidateFiles;
+        public DownloadDialog DownloadDialog;
+    }
 
     public class startGameVariables
     {
@@ -96,110 +102,91 @@ namespace MinecraftCL
         {
             returnString = "success"; // This will be changed when there is an error in the code
             bool authenticationSuccess = true;
-            if (Globals.HasInternetConnectivity == true)
+            try
             {
-                // Begin timing authentication
-                Analytics.BeginTiming(TimingsMeasureType.MinecraftAuthentication);
+                var responsePayload = "";
 
-                try
+                /* Code from AtomLauncher */
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://authserver.mojang.com/authenticate"); //Start WebRequest
+                request.Method = "POST";                                                                //Method type, POST
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(new                           //Object to Upload
                 {
-                    var responsePayload = "";
-
-                    /* Code from AtomLauncher */
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://authserver.mojang.com/authenticate"); //Start WebRequest
-                    request.Method = "POST";                                                                //Method type, POST
-                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(new                           //Object to Upload
+                    agent = new                 // optional /                                           //This seems to be required for minecraft despite them saying its optional.
+                    {                           //          /
+                        name = "Minecraft",     // -------- / So far this is the only encountered value
+                        version = 1             // -------- / This number might be increased by the vanilla client in the future
+                    },                          //          /
+                    username = sGV.Username,   // Can be an email address or player name for unmigrated accounts
+                    password = sGV.Password
+                    //clientToken = "TOKEN"     // Client Identifier: optional
+                });
+                byte[] uploadBytes = Encoding.UTF8.GetBytes(json);                                      //Convert UploadObject to ByteArray
+                request.ContentType = "application/json";                                               //Set Client Header ContentType to "application/json"
+                request.ContentLength = uploadBytes.Length;                                             //Set Client Header ContentLength to size of upload
+                using (Stream dataStream = request.GetRequestStream())                                  //Start/Close Upload
+                {
+                    dataStream.Write(uploadBytes, 0, uploadBytes.Length);                               //Upload the ByteArray
+                }
+                using (WebResponse response = request.GetResponse())                                    //Start/Close Download
+                {
+                    using (Stream dataStream = response.GetResponseStream())                            //Start/Close Download Content
                     {
-                        agent = new                 // optional /                                           //This seems to be required for minecraft despite them saying its optional.
-                        {                           //          /
-                            name = "Minecraft",     // -------- / So far this is the only encountered value
-                            version = 1             // -------- / This number might be increased by the vanilla client in the future
-                        },                          //          /
-                        username = sGV.Username,   // Can be an email address or player name for unmigrated accounts
-                        password = sGV.Password
-                        //clientToken = "TOKEN"     // Client Identifier: optional
-                    });
-                    byte[] uploadBytes = Encoding.UTF8.GetBytes(json);                                      //Convert UploadObject to ByteArray
-                    request.ContentType = "application/json";                                               //Set Client Header ContentType to "application/json"
-                    request.ContentLength = uploadBytes.Length;                                             //Set Client Header ContentLength to size of upload
-                    using (Stream dataStream = request.GetRequestStream())                                  //Start/Close Upload
-                    {
-                        dataStream.Write(uploadBytes, 0, uploadBytes.Length);                               //Upload the ByteArray
-                    }
-                    using (WebResponse response = request.GetResponse())                                    //Start/Close Download
-                    {
-                        using (Stream dataStream = response.GetResponseStream())                            //Start/Close Download Content
+                        using (StreamReader reader = new StreamReader(dataStream))                      //Start/Close Reading the Stream
                         {
-                            using (StreamReader reader = new StreamReader(dataStream))                      //Start/Close Reading the Stream
-                            {
-                                responsePayload = reader.ReadToEnd();                                       //Save Downloaded Content
-                            }
+                            responsePayload = reader.ReadToEnd();                                       //Save Downloaded Content
                         }
                     }
-                    dynamic responseJson = JsonConvert.DeserializeObject(responsePayload);                  //Convert string to dynamic josn object
-                    if (responseJson.accessToken != null)                                                   //Detect if this is an error Payload
+                }
+                dynamic responseJson = JsonConvert.DeserializeObject(responsePayload);                  //Convert string to dynamic josn object
+                if (responseJson.accessToken != null)                                                   //Detect if this is an error Payload
+                {
+                    sGV.AccessToken = responseJson.accessToken;                                           //Assign Access Token
+                    //mcClientToken = responseJson.clientToken;                                           //Assign Client Token
+                    if (responseJson.selectedProfile.id != null)                                        //Detect if this is an error Payload
                     {
-                        sGV.AccessToken = responseJson.accessToken;                                           //Assign Access Token
-                        //mcClientToken = responseJson.clientToken;                                           //Assign Client Token
-                        if (responseJson.selectedProfile.id != null)                                        //Detect if this is an error Payload
+                        sGV.UUID = responseJson.selectedProfile.id;                                       //Assign User ID
+                        sGV.Username = responseJson.selectedProfile.name;                                 //Assign Selected Profile Name
+                        if (responseJson.selectedProfile.legacy == "true")
                         {
-                            sGV.UUID = responseJson.selectedProfile.id;                                       //Assign User ID
-                            sGV.Username = responseJson.selectedProfile.name;                                 //Assign Selected Profile Name
-                            if (responseJson.selectedProfile.legacy == "true")
-                            {
-                                sGV.userType = "legacy";
-                            }
-                            else
-                            {
-                                sGV.userType = "mojang";
-                            }
+                            sGV.userType = "legacy";
                         }
                         else
                         {
-                            returnString = "Error: WebPayLoad: Missing UUID and Username";
-                            authenticationSuccess = false;
+                            sGV.userType = "mojang";
                         }
                     }
-                    else if (responseJson.errorMessage != null)
-                    {
-                        returnString = "Error: WebPayLoad: " + responseJson.errorMessage;
-                        authenticationSuccess = false;
-                    }
                     else
                     {
-                        returnString = "Error: WebPayLoad: Had an error and the payload was empty.";
+                        returnString = "Error: WebPayLoad: Missing UUID and Username";
                         authenticationSuccess = false;
                     }
                 }
-                catch (System.Net.WebException startGameException)
+                else if (responseJson.errorMessage != null)
                 {
-                    if (startGameException.Response != null && (int)((HttpWebResponse)startGameException.Response).StatusCode == 403 && ((HttpWebResponse)startGameException.Response).StatusDescription == "Forbidden")
-                    {
-                        // Invalid credentials
-                        returnString = "Invalid credentials. Please check your username and password. For Mojang accounts, use your email as username.";
-                    }
-                    else
-                    {
-                        // Catches any other exceptions that may occur
-                        returnString = "There was an error. Check your username + password. Exception: " + startGameException;
-                    }
+                    returnString = "Error: WebPayLoad: " + responseJson.errorMessage;
                     authenticationSuccess = false;
                 }
-
-                // Stop timing authentication
-                Analytics.StopTiming(TimingsMeasureType.MinecraftAuthentication);
-
-                return authenticationSuccess;
+                else
+                {
+                    returnString = "Error: WebPayLoad: Had an error and the payload was empty.";
+                    authenticationSuccess = false;
+                }
             }
-            else
+            catch (System.Net.WebException startGameException)
             {
-                // No internet connection available
-                returnString = "Warning: No internet connection available.";
-                sGV.AccessToken = "{}";
-                sGV.UUID = "{}";
-                sGV.userType = "legacy";
-                return true;
+                if (startGameException.Response != null && (int)((HttpWebResponse)startGameException.Response).StatusCode == 403 && ((HttpWebResponse)startGameException.Response).StatusDescription == "Forbidden")
+                {
+                    // Invalid credentials
+                    returnString = "Invalid credentials. Please check your username and password. For Mojang accounts, use your email as username.";
+                }
+                else
+                {
+                    // Catches any other exceptions that may occur
+                    returnString = "There was an error. Check your username + password. Exception: " + startGameException;
+                }
+                authenticationSuccess = false;
             }
+            return authenticationSuccess;
         }
         /// <summary>
         /// Starts the game/modpack, providing that the proper values have already been determined
@@ -212,22 +199,6 @@ namespace MinecraftCL
             string installPath = "";
             startMinecraftReturnCode returnCode = startMinecraftReturnCode.StartedMinecraft;
             string mcError = "";
-
-            #region Backup Minecraft worlds if specified
-            if (sGV.AutoBackupWorld == true && Directory.Exists(sGV.InstallDir + @"\.minecraft\saves\"))
-            {
-                MessageWindow backupNotificationBox = new MessageWindow();
-                backupNotificationBox.messageText.Text = "Backing up worlds before starting Minecraft...";
-                backupNotificationBox.closeTimeoutMilliseconds = -1;
-                backupNotificationBox.Show();
-                backupNotificationBox.Activate();
-
-                string currentDateTime = DateTime.Now.Hour + "." + DateTime.Now.Minute + "." + DateTime.Now.Millisecond + " - " + DateTime.Now.ToString("MMMM") + " " + DateTime.Now.Day + ", " + DateTime.Now.Year;
-                DirectoryCopy.CopyRecursive(sGV.InstallDir + @"\.minecraft\saves\", sGV.InstallDir + "\\Backups\\" + currentDateTime + "\\");
-
-                backupNotificationBox.Close();
-            }
-            #endregion
 
             // Begin to set up Minecraft java process
             ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -271,58 +242,11 @@ namespace MinecraftCL
             startInfo.Arguments = pArguments.Replace("%mcInstallDir%", sGV.InstallDir);
             startInfo.WorkingDirectory = sGV.InstallDir;
 
-            #region Save Settings (Username, Password, Last used profile)
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml");
-            XmlElement xDocRoot = xDoc.DocumentElement;
-            // Save username
-            if (xDoc.SelectSingleNode("/settings/Username") == null)
-            {
-                XmlElement usernameElement = xDoc.CreateElement("Username");
-                usernameElement.InnerText = sGV.Username;
-                xDocRoot.AppendChild(usernameElement);
-            }
-            else
-                xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.Username;
-
-            // Save password
-            if (xDoc.SelectSingleNode("/settings/Password") == null)
-            {
-                XmlElement passwordElement = xDoc.CreateElement("Password");
-                passwordElement.InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
-                xDocRoot.AppendChild(passwordElement);
-            }
-            else
-                xDoc.SelectSingleNode("/settings/Password").InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
-
-            // Save last used profile
-            if (xDoc.SelectSingleNode("/settings/LastUsedProfile") == null)
-            {
-                XmlElement lastUsedProfileElement = xDoc.CreateElement("LastUsedProfile");
-                lastUsedProfileElement.InnerText = sGV.LastUsedProfile;
-                xDocRoot.AppendChild(lastUsedProfileElement);
-            }
-            else
-                xDoc.SelectSingleNode("/settings/LastUsedProfile").InnerText = sGV.LastUsedProfile;
-
-            xDoc.Save(System.Environment.CurrentDirectory + "//.mcl//MinecraftCLSettings.xml");
-            #endregion
+            
 
             // Hide the window and catch any errors
             using (Process process = Process.Start(startInfo))
             {
-                // Easter egg!
-                if (DateTime.Now.Month == 11 && DateTime.Now.Day == 13)
-                {
-                    process.WaitForInputIdle();
-                    DebugConsole.Print("Easter Egg initialized!", "Minecraft.Start()", "WHEE");
-                    SetWindowText(process.MainWindowHandle, "Happy Birthday!");
-                    Icon cakeLarge = new Icon(Assembly.GetExecutingAssembly().GetManifestResourceStream("MinecraftCL.Resources.Minecraft_Cake_32.ico"));
-                    Icon cakeSmall = new Icon(Assembly.GetExecutingAssembly().GetManifestResourceStream("MinecraftCL.Resources.Minecraft_Cake_16.ico"));
-                    SendMessage(process.MainWindowHandle, WM_SETICON, ICON_BIG, cakeLarge.Handle);
-                    SendMessage(process.MainWindowHandle, WM_SETICON, ICON_SMALL, cakeSmall.Handle);
-                }
-
                 string javaOutput = process.StandardOutput.ReadToEnd();
                 string javaError = process.StandardError.ReadToEnd();
                 int exitCode = process.ExitCode;
@@ -507,10 +431,8 @@ namespace MinecraftCL
 
         public static string DownloadGame(downloadVariables downloaderInfo)
         {
-            if (Globals.HasInternetConnectivity == true)
+            try
             {
-                Analytics.BeginTiming(TimingsMeasureType.MojangMinecraftDownload);
-
                 string mcAssetsVersion = "";
                 bool validateFiles = downloaderInfo.ValidateFiles;
                 string mcMainClass = "";
@@ -532,7 +454,6 @@ namespace MinecraftCL
 
                 // DOWNLOAD ALL MINECRAFT FILES
                 string executableFilePath = System.Windows.Application.ResourceAssembly.Location;
-                var configFile = ConfigurationManager.OpenExeConfiguration(executableFilePath);
                 if (mcVersion == "latest-release")
                 {
                     mcVersion = mcVersionList.latest.release;
@@ -755,16 +676,15 @@ namespace MinecraftCL
                 DDialog.Dispatcher.BeginInvoke(
                     (Action)(() => { DDialog.Close(); }));
 
-                Analytics.StopTiming(TimingsMeasureType.MojangMinecraftDownload);
                 return "success"; // Return success in downloading
             }
-            else
+            catch (WebException e)
             {
-                // No internet connectivity
+                // An exception occured
                 downloaderInfo.DownloadDialog.downloadIsInProgress = false;
                 downloaderInfo.DownloadDialog.Dispatcher.BeginInvoke(
                     (Action)(() => { downloaderInfo.DownloadDialog.Close(); }));
-                return "No internet connectivity is available, cannot download files.";
+                return "An error occurred while downloading files. " + e.Message;
             }
             #endregion
         }

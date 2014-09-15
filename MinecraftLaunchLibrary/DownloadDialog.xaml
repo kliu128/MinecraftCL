@@ -1,4 +1,4 @@
-﻿<Window x:Class="MinecraftCL.DownloadDialog"
+﻿<Window x:Class="MinecraftLaunchLibrary.DownloadDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Downloading Files" WindowStyle="ToolWindow" 
