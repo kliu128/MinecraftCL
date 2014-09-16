@@ -58,15 +58,15 @@ namespace MinecraftLaunchLibrary
     public enum startMinecraftReturnCode
     {
         StartedMinecraft,
-        CouldNotLocateJava,
-        MinecraftError
+        CouldNotLocateJava
     }
 
     public struct startGameReturn
     {
+        public ProcessStartInfo StartInfo;
+        public Process MinecraftProcess;
         public startMinecraftReturnCode ReturnCode;
-        public ProcessStartInfo ProcessStartInfo;
-        public string Error;
+        public string ErrorInfo;
     }
 
     public static class MinecraftUtils
@@ -193,12 +193,11 @@ namespace MinecraftLaunchLibrary
         /// (such as authToken, versionInfo, etc.). It also waits until Minecraft stops and returns
         /// what happened.
         /// </summary>
+        /// <returns>Returns the Minecraft java process.</returns>
         public static startGameReturn Start(startGameVariables sGV)
         {
             isRunning = true;
             string installPath = "";
-            startMinecraftReturnCode returnCode = startMinecraftReturnCode.StartedMinecraft;
-            string mcError = "";
 
             // Begin to set up Minecraft java process
             ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -230,7 +229,7 @@ namespace MinecraftLaunchLibrary
             }
             else
             {
-                returnCode = startMinecraftReturnCode.CouldNotLocateJava;
+                return new startGameReturn { StartInfo = null, MinecraftProcess = null, ErrorInfo = "Could not locate Java executable.", ReturnCode = startMinecraftReturnCode.CouldNotLocateJava };
             }
             #endregion
 
@@ -244,41 +243,10 @@ namespace MinecraftLaunchLibrary
 
             
 
-            // Hide the window and catch any errors
-            using (Process process = Process.Start(startInfo))
-            {
-                string javaOutput = process.StandardOutput.ReadToEnd();
-                string javaError = process.StandardError.ReadToEnd();
-                int exitCode = process.ExitCode;
-                process.WaitForExit();  // This will quietly wait until minecraft has closed
-                if (exitCode != 0)      // An exit code other than 0 is an error
-                {
-                    if (javaOutput.Contains("---- Minecraft Crash Report ----"))
-                    {
-                        // This was an official minecraft crash, complete with crash report
-                        mcError = javaOutput.Substring(javaOutput.LastIndexOf("---- Minecraft Crash Report ----") + 1);
-                    }
-                        // Something interesting: the other crashes aren't actually caught by the official Minecraft launcher
-                    else if (javaError == "")
-                    {
-                        mcError = javaOutput;
-                    }
-                    else
-                    {
-                        mcError = javaError;
-                    }
-                    returnCode = startMinecraftReturnCode.MinecraftError;
-                }
-            }
-            // By now, minecraft has closed, either peacefully or with an error.
-            // Return success/failure
-            isRunning = false;
-            return new startGameReturn { ReturnCode = returnCode, ProcessStartInfo = startInfo, Error = mcError };
-        }
-
-        
-
-        
+            // Start Minecraft and return
+            Process mcProc = Process.Start(startInfo);
+            return new startGameReturn { MinecraftProcess = mcProc, StartInfo = startInfo, ReturnCode = startMinecraftReturnCode.StartedMinecraft, ErrorInfo = "" };
+        }        
 
         private static int downloadFile(string downloadLocation, string saveLocation, bool validateFiles, string messageToDisplay, DownloadDialog downloadDialog, long specifiedFileSize = new long())
         {
