@@ -69,6 +69,13 @@ namespace MinecraftLaunchLibrary
         public string ErrorInfo;
     }
 
+    public class DownloadUpdateEventArgs
+    {
+        public string currentFile { get; set; }
+        public string stage { get; set; }
+        public string mcVersion { get; set; }
+    }
+
     public static class MinecraftUtils
     {
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -96,7 +103,9 @@ namespace MinecraftLaunchLibrary
             }
         }
 
-        public static bool isRunning { get; set; }
+        public static delegate void DownloadUpdateEventHandler(DownloadUpdateEventArgs e);
+
+        public static event DownloadUpdateEventHandler DownloadUpdateEvent;
 
         public static bool authenticateMinecraft(ref startGameVariables sGV, out string returnString)
         {
@@ -196,7 +205,6 @@ namespace MinecraftLaunchLibrary
         /// <returns>Returns the Minecraft java process.</returns>
         public static startGameReturn Start(startGameVariables sGV)
         {
-            isRunning = true;
             string installPath = "";
 
             // Begin to set up Minecraft java process
@@ -566,6 +574,7 @@ namespace MinecraftLaunchLibrary
             }
             #endregion
         }
+
         /// <summary>
         /// Checks and downloads a single library from the minecraft servers.
         /// Will only download if necessary on that system.
@@ -698,15 +707,19 @@ namespace MinecraftLaunchLibrary
                 // Ex. "\.minecraft\libraries\org\lwjgl\lwjgl\lwjgl\2.9.1-nightly-20131120\lwjgl-2.9.1-nightly-20131120.jar"
                 libraryLocation = @"\.minecraft\libraries\" + libraryDownloadURL[0].Replace('.', '\\') + "\\" + libraryDownloadURL[1] + "\\" + libraryDownloadURL[2] + "\\" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2] + downloadType + ".jar";
 
-                // Download the library
+                // Update download progress event.
+                if (DownloadUpdateEvent != null)
+                    DownloadUpdateEvent(new DownloadUpdateEventArgs { stage = "Downloading library", currentFile = libraryJarName, mcVersion = mcVersion } );
+
+                // Download the library.
                 downloadFile(libraryDownloadPath + downloadType + ".jar", librarySavePath + downloadType + ".jar", validateFiles, "Downloading library... " + libraryJarName, DDialog);
                 
                 // Extract library if needed to natives folder
                 if (extractNative == true)
                 {
-                    // Display extraction information on download dialog
-                    DDialog.downloadFileDisplay.Dispatcher.BeginInvoke(
-                        (Action)(() => { DDialog.downloadFileDisplay.Text = "Extracting native library for Minecraft " + mcVersion + "... " + libraryJarName; }));
+                    // Trigger download progress update event for extracting natives
+                    if (DownloadUpdateEvent != null)
+                        DownloadUpdateEvent(new DownloadUpdateEventArgs { mcVersion = mcVersion, currentFile = libraryJarName, stage = "Downloading native library..."} )
 
                     if (!System.IO.Directory.Exists(downloadLocation + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\"))
                     {

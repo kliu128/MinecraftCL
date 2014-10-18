@@ -10,6 +10,7 @@ using System.Web.Helpers;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
+using MinecraftLaunchLibrary;
 
 namespace MinecraftCL.FeedTheBeast
 {
@@ -195,7 +196,7 @@ namespace MinecraftCL.FeedTheBeast
         private class FTBPackJSON
         {
             public string minecraftArguments { get; set; }
-            public List<Library> libraries { get; set; }
+            public List<FTBLibrary> libraries { get; set; }
             public string mainClass { get; set; }
             public string id { get; set; }
         }
