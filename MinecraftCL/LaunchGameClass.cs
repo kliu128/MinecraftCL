@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace MinecraftCL
 {
     public enum LaunchReturnType
     {
-        StartedMinecraft,
+        SuccessfulLaunch,
         CouldNotLocateJava,
         MinecraftError,
         AuthenticationError,
@@ -215,45 +216,6 @@ namespace MinecraftCL
                     backupNotificationBox.Close();
                 }
                 #endregion
-
-                startGameReturn startReturn = MinecraftUtils.Start(sGV);
-                #region Save Settings (Username, Password, Last used profile)
-                XmlDocument xDoc = new XmlDocument();
-                xDoc.Load(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml");
-                XmlElement xDocRoot = xDoc.DocumentElement;
-                // Save username
-                if (xDoc.SelectSingleNode("/settings/Username") == null)
-                {
-                    XmlElement usernameElement = xDoc.CreateElement("Username");
-                    usernameElement.InnerText = sGV.Username;
-                    xDocRoot.AppendChild(usernameElement);
-                }
-                else
-                    xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.Username;
-
-                // Save password
-                if (xDoc.SelectSingleNode("/settings/Password") == null)
-                {
-                    XmlElement passwordElement = xDoc.CreateElement("Password");
-                    passwordElement.InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
-                    xDocRoot.AppendChild(passwordElement);
-                }
-                else
-                    xDoc.SelectSingleNode("/settings/Password").InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
-
-                // Save last used profile
-                if (xDoc.SelectSingleNode("/settings/LastUsedProfile") == null)
-                {
-                    XmlElement lastUsedProfileElement = xDoc.CreateElement("LastUsedProfile");
-                    lastUsedProfileElement.InnerText = sGV.LastUsedProfile;
-                    xDocRoot.AppendChild(lastUsedProfileElement);
-                }
-                else
-                    xDoc.SelectSingleNode("/settings/LastUsedProfile").InnerText = sGV.LastUsedProfile;
-
-                xDoc.Save(System.Environment.CurrentDirectory + "//.mcl//MinecraftCLSettings.xml");
-                #endregion
-                return new LaunchGameReturn { returnInfo = "AttemptedStart", returnType = startReturn };
             }
         }
 
@@ -266,28 +228,73 @@ namespace MinecraftCL
         /// <returns></returns>
         private static LaunchGameReturn StartGame(profileSelection profile, startGameVariables sGV)
         {
-            string javaOutput = process.StandardOutput.ReadToEnd();
-            string javaError = process.StandardError.ReadToEnd();
-            int exitCode = process.ExitCode;
-            process.WaitForExit();  // This will quietly wait until minecraft has closed
+            #region Save Settings (Username, Password, Last used profile)
+            XmlDocument xDoc = new XmlDocument();
+            xDoc.Load(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml");
+            XmlElement xDocRoot = xDoc.DocumentElement;
+            // Save username
+            if (xDoc.SelectSingleNode("/settings/Username") == null)
+            {
+                XmlElement usernameElement = xDoc.CreateElement("Username");
+                usernameElement.InnerText = sGV.Username;
+                xDocRoot.AppendChild(usernameElement);
+            }
+            else
+                xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.Username;
+
+            // Save password
+            if (xDoc.SelectSingleNode("/settings/Password") == null)
+            {
+                XmlElement passwordElement = xDoc.CreateElement("Password");
+                passwordElement.InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
+                xDocRoot.AppendChild(passwordElement);
+            }
+            else
+                xDoc.SelectSingleNode("/settings/Password").InnerText = StringCipher.Encrypt(sGV.Password, "minecraftCLNoOneWillGuessThis");
+
+            // Save last used profile
+            if (xDoc.SelectSingleNode("/settings/LastUsedProfile") == null)
+            {
+                XmlElement lastUsedProfileElement = xDoc.CreateElement("LastUsedProfile");
+                lastUsedProfileElement.InnerText = sGV.LastUsedProfile;
+                xDocRoot.AppendChild(lastUsedProfileElement);
+            }
+            else
+                xDoc.SelectSingleNode("/settings/LastUsedProfile").InnerText = sGV.LastUsedProfile;
+
+            xDoc.Save(System.Environment.CurrentDirectory + "//.mcl//MinecraftCLSettings.xml");
+            #endregion
+
+            startGameReturn startReturn = MinecraftUtils.Start(sGV);
+
+            Process mcProcess = startReturn.MinecraftProcess;
+            string javaOutput = mcProcess.StandardOutput.ReadToEnd();
+            string javaError = mcProcess.StandardError.ReadToEnd();
+            int exitCode = mcProcess.ExitCode;
+            mcProcess.WaitForExit();  // This will quietly wait until minecraft has closed
             if (exitCode != 0)      // An exit code other than 0 is an error
             {
+                string returnInfo = "";
                 if (javaOutput.Contains("---- Minecraft Crash Report ----"))
                 {
                     // This was an official minecraft crash, complete with crash report
-                    mcError = javaOutput.Substring(javaOutput.LastIndexOf("---- Minecraft Crash Report ----") + 1);
+                    returnInfo = javaOutput.Substring(javaOutput.LastIndexOf("---- Minecraft Crash Report ----") + 1);
                 }
                 // Something interesting: the other crashes aren't actually caught by the official Minecraft launcher
                 else if (javaError == "")
                 {
-                    mcError = javaOutput;
+                    returnInfo = javaOutput;
                 }
                 else
                 {
-                    mcError = javaError;
+                    returnInfo = javaError;
                 }
-                returnCode = startMinecraftReturnCode.MinecraftError;
+                return new LaunchGameReturn { returnInfo = returnInfo, returnType = LaunchReturnType.MinecraftError };
             }
+            else if (exitCode == 0)
+                return new LaunchGameReturn { returnInfo = "Success.", returnType = LaunchReturnType.SuccessfulLaunch };
+            else
+                throw new Exception { Source = "Minecraft exited with error code " + exitCode + "." };
         }
     }
 }
