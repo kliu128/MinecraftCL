@@ -30,7 +30,6 @@ namespace MinecraftLaunchLibrary
         public string mcVersion;
         public string mcInstallDir;
         public bool ValidateFiles;
-        public DownloadDialog DownloadDialog;
     }
 
     public class startGameVariables
@@ -69,11 +68,21 @@ namespace MinecraftLaunchLibrary
         public string ErrorInfo;
     }
 
-    public class DownloadUpdateEventArgs
+    public enum DownloadUpdateStage
     {
-        public string currentFile { get; set; }
-        public string stage { get; set; }
-        public string mcVersion { get; set; }
+        DownloadingGenericFile,
+        DownloadingLibrary,
+        ExtractingNativeLibrary,
+        DownloadingMinecraftJar,
+        DownloadingAsset,
+        CompletedDownload
+    }
+
+    public struct DownloadUpdateEventArgs
+    {
+        public string CurrentFile { get; set; }
+        public DownloadUpdateStage Stage { get; set; }
+        public string MinecraftVersion { get; set; }
     }
 
     public static class MinecraftUtils
@@ -103,7 +112,7 @@ namespace MinecraftLaunchLibrary
             }
         }
 
-        public static delegate void DownloadUpdateEventHandler(DownloadUpdateEventArgs e);
+        public delegate void DownloadUpdateEventHandler(DownloadUpdateEventArgs e);
 
         public static event DownloadUpdateEventHandler DownloadUpdateEvent;
 
@@ -197,6 +206,7 @@ namespace MinecraftLaunchLibrary
             }
             return authenticationSuccess;
         }
+
         /// <summary>
         /// Starts the game/modpack, providing that the proper values have already been determined
         /// (such as authToken, versionInfo, etc.). It also waits until Minecraft stops and returns
@@ -255,8 +265,8 @@ namespace MinecraftLaunchLibrary
             Process mcProc = Process.Start(startInfo);
             return new startGameReturn { MinecraftProcess = mcProc, StartInfo = startInfo, ReturnCode = startMinecraftReturnCode.StartedMinecraft, ErrorInfo = "" };
         }        
-
-        private static int downloadFile(string downloadLocation, string saveLocation, bool validateFiles, string messageToDisplay, DownloadDialog downloadDialog, long specifiedFileSize = new long())
+        ///
+        private static int downloadFile(string downloadLocation, string saveLocation, bool validateFiles, DownloadUpdateEventArgs downloadEventArgs, long specifiedFileSize = new long())
         {
             // return code 0 = downloaded file
             // return code 1 = skipped file
@@ -265,8 +275,8 @@ namespace MinecraftLaunchLibrary
             int returnValue = 0;
 
             // Notify the user that we are downloading
-            downloadDialog.downloadFileDisplay.Dispatcher.BeginInvoke(
-                (Action)(() => { downloadDialog.downloadFileDisplay.Text = messageToDisplay; }));
+            if (DownloadUpdateEvent != null)
+                DownloadUpdateEvent(downloadEventArgs);
 
             if (validateFiles == true)
             {
@@ -327,10 +337,9 @@ namespace MinecraftLaunchLibrary
                 string mcVersion = downloaderInfo.mcVersion;
                 string mcInstallDir = downloaderInfo.mcInstallDir;
                 string mcVersionJSONString;
-                DownloadDialog DDialog = downloaderInfo.DownloadDialog;
 
                 // Download versions.json to get version list
-                downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/versions.json", "versions.json", validateFiles, "Downloading files for Minecraft " + mcVersion + ".", DDialog);
+                downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/versions.json", "versions.json", validateFiles, new DownloadUpdateEventArgs { CurrentFile = "versions.json", MinecraftVersion = mcVersion, Stage = DownloadUpdateStage.DownloadingGenericFile });
                 using (StreamReader streamReader = new StreamReader("versions.json", Encoding.UTF8))
                 {
                     mcVersionJSONString = streamReader.ReadToEnd();
@@ -358,7 +367,14 @@ namespace MinecraftLaunchLibrary
                 try
                 {
                     // Try to download *version*.json, with detailed information on how to run that version of minecraft
-                    downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/" + mcVersion + "/" + mcVersion + ".json", System.Environment.CurrentDirectory + "\\.mcl\\versions\\" + mcVersion + ".json", validateFiles, "Downloading files for Minecraft " + mcVersion + "..." + mcVersion + ".json", DDialog);
+                    downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/" + mcVersion + "/" + mcVersion + ".json",
+                        System.Environment.CurrentDirectory + "\\.mcl\\versions\\" + mcVersion + ".json", validateFiles,
+                        new DownloadUpdateEventArgs
+                        {
+                            CurrentFile = mcVersion + ".json",
+                            MinecraftVersion = mcVersion,
+                            Stage = DownloadUpdateStage.DownloadingGenericFile
+                        });
                 }
                 catch (WebException w)
                 {
@@ -402,7 +418,7 @@ namespace MinecraftLaunchLibrary
                 foreach (var library in checkMcLibraries)
                 {
                     string libraryLocation;
-                    bool libraryDownloaded = DownloadLibrary(library, mcInstallDir, validateFiles, DDialog, mcVersion, out libraryLocation);
+                    bool libraryDownloaded = DownloadLibrary(library, mcInstallDir, validateFiles, mcVersion, out libraryLocation);
                     if (libraryDownloaded == true)
                     {
                         string currentDownloadType = "";
@@ -462,7 +478,7 @@ namespace MinecraftLaunchLibrary
                             System.IO.Directory.Delete(mcInstallDir + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\META-INF\\", true);
                         }
                     }*/
-                
+
 
 
                 #endregion
@@ -474,7 +490,15 @@ namespace MinecraftLaunchLibrary
                 }
 
                 // Download minecraft jar
-                downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/" + mcVersion + "/" + mcVersion + ".jar", mcInstallDir + @"\.minecraft\versions\" + mcVersion + @"\" + mcVersion + ".jar", validateFiles, "Downloading Files for " + mcVersion + "... " + mcVersion + "/" + mcVersion + ".jar", DDialog);
+                downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/" + mcVersion + "/" + mcVersion + ".jar",
+                    mcInstallDir + @"\.minecraft\versions\" + mcVersion + @"\" + mcVersion + ".jar",
+                    validateFiles,
+                    new DownloadUpdateEventArgs
+                    {
+                        CurrentFile = mcVersion + ".jar",
+                        MinecraftVersion = mcVersion,
+                        Stage = DownloadUpdateStage.DownloadingMinecraftJar
+                    });
 
                 #region Download Assets
                 if (!System.IO.Directory.Exists(mcInstallDir + @"\.minecraft\assets\indexes\"))
@@ -484,7 +508,15 @@ namespace MinecraftLaunchLibrary
                 }
 
                 // Download assets information, *assetversion*.json
-                downloadFile("https://s3.amazonaws.com/Minecraft.Download/indexes/" + mcAssetsVersion + ".json", mcInstallDir + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json", validateFiles, "Downloading files for Minecraft " + mcVersion + "... " + @"assets\indexes\" + mcAssetsVersion + ".json", DDialog);
+                downloadFile("https://s3.amazonaws.com/Minecraft.Download/indexes/" + mcAssetsVersion + ".json",
+                    mcInstallDir + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json",
+                    validateFiles,
+                    new DownloadUpdateEventArgs
+                    {
+                        CurrentFile = mcAssetsVersion + ".json",
+                        MinecraftVersion = mcVersion,
+                        Stage = DownloadUpdateStage.DownloadingGenericFile
+                    });
 
                 string assetInformation;
                 using (StreamReader streamReader = new StreamReader(mcInstallDir + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json", Encoding.UTF8))
@@ -499,8 +531,18 @@ namespace MinecraftLaunchLibrary
 
                 foreach (var asset in assetInfo)
                 {
-                    Directory.CreateDirectory(mcInstallDir + @"\.minecraft\assets\objects\" + asset.Value.hash.Substring(0, 2)); // Create asset directory, eg. \.minecraft\assets\objects\eb\
-                    int downloadFileReturn = downloadFile("http://resources.download.minecraft.net/" + asset.Value.hash.Substring(0, 2) + "/" + asset.Value.hash, mcInstallDir + @"\.minecraft\assets\objects\" + asset.Value.hash.Substring(0, 2) + @"\" + asset.Value.hash, validateFiles, "Downloading files for Minecraft " + mcVersion + "... " + @"assets\objects\" + asset.Value.hash.Substring(0, 2) + @"\" + asset.Value.hash, DDialog, Convert.ToInt64(asset.Value.size));
+                    string assetDirectory = asset.Value.hash.Substring(0, 2);
+                    Directory.CreateDirectory(mcInstallDir + @"\.minecraft\assets\objects\" + assetDirectory); // Create asset directory, eg. \.minecraft\assets\objects\eb\
+                    int downloadFileReturn = downloadFile("http://resources.download.minecraft.net/" + asset.Value.hash.Substring(0, 2) + "/" + asset.Value.hash,
+                        mcInstallDir + @"\.minecraft\assets\objects\" + asset.Value.hash.Substring(0, 2) + @"\" + asset.Value.hash,
+                        validateFiles,
+                        new DownloadUpdateEventArgs
+                        {
+                            CurrentFile = asset.Value.hash,
+                            MinecraftVersion = mcVersion,
+                            Stage = DownloadUpdateStage.DownloadingAsset
+                        },
+                        Convert.ToInt64(asset.Value.size));
                     if (mcAssetsVersion == "legacy" && downloadFileReturn == 0) // If legacy assets must be copied, and the file was downloaded/updated, then recopy the legacy file
                     {
                         Directory.CreateDirectory(Path.GetDirectoryName(mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + asset.Key));
@@ -553,23 +595,21 @@ namespace MinecraftLaunchLibrary
                     doc.Root.Add(mcXMLValues);
                     doc.Save(mcInstallDir + "\\.mcl\\VersionInformation.xml");
                 }
-                DDialog.downloadFileDisplay.Dispatcher.BeginInvoke(
-                    (Action)(() => { DDialog.downloadFileDisplay.Text = "Download complete for " + mcVersion + "."; }));
 
-                System.Threading.Thread.Sleep(500);
-
-                DDialog.downloadIsInProgress = false;
-                DDialog.Dispatcher.BeginInvoke(
-                    (Action)(() => { DDialog.Close(); }));
+                // Trigger event for download completion
+                if (DownloadUpdateEvent != null)
+                    DownloadUpdateEvent(new DownloadUpdateEventArgs
+                    {
+                        CurrentFile = null,
+                        MinecraftVersion = mcVersion,
+                        Stage = DownloadUpdateStage.CompletedDownload
+                    });
 
                 return "success"; // Return success in downloading
             }
             catch (WebException e)
             {
                 // An exception occured
-                downloaderInfo.DownloadDialog.downloadIsInProgress = false;
-                downloaderInfo.DownloadDialog.Dispatcher.BeginInvoke(
-                    (Action)(() => { downloaderInfo.DownloadDialog.Close(); }));
                 return "An error occurred while downloading files. " + e.Message;
             }
             #endregion
@@ -586,7 +626,7 @@ namespace MinecraftLaunchLibrary
         /// <param name="validateFiles"></param>
         /// <param name="DDialog"></param>
         /// <param name="mcVersion"></param>
-        private static bool DownloadLibrary(Library libraryClass, string downloadLocation, bool validateFiles, DownloadDialog DDialog, string mcVersion, out string libraryLocation)
+        private static bool DownloadLibrary(Library libraryClass, string downloadLocation, bool validateFiles, string mcVersion, out string libraryLocation)
         {
             bool addDownload = false;
             bool extractNative = false;
@@ -706,20 +746,29 @@ namespace MinecraftLaunchLibrary
                 // The full path of the library starting from the .minecraft folder, once saved.
                 // Ex. "\.minecraft\libraries\org\lwjgl\lwjgl\lwjgl\2.9.1-nightly-20131120\lwjgl-2.9.1-nightly-20131120.jar"
                 libraryLocation = @"\.minecraft\libraries\" + libraryDownloadURL[0].Replace('.', '\\') + "\\" + libraryDownloadURL[1] + "\\" + libraryDownloadURL[2] + "\\" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2] + downloadType + ".jar";
-
-                // Update download progress event.
-                if (DownloadUpdateEvent != null)
-                    DownloadUpdateEvent(new DownloadUpdateEventArgs { stage = "Downloading library", currentFile = libraryJarName, mcVersion = mcVersion } );
-
+                
                 // Download the library.
-                downloadFile(libraryDownloadPath + downloadType + ".jar", librarySavePath + downloadType + ".jar", validateFiles, "Downloading library... " + libraryJarName, DDialog);
+                downloadFile(libraryDownloadPath + downloadType + ".jar", 
+                    librarySavePath + downloadType + ".jar", 
+                    validateFiles,
+                    new DownloadUpdateEventArgs
+                    {
+                        CurrentFile = libraryJarName,
+                        MinecraftVersion = mcVersion,
+                        Stage = DownloadUpdateStage.DownloadingLibrary
+                    });
                 
                 // Extract library if needed to natives folder
                 if (extractNative == true)
                 {
                     // Trigger download progress update event for extracting natives
                     if (DownloadUpdateEvent != null)
-                        DownloadUpdateEvent(new DownloadUpdateEventArgs { mcVersion = mcVersion, currentFile = libraryJarName, stage = "Downloading native library..."} )
+                        DownloadUpdateEvent(new DownloadUpdateEventArgs
+                        { 
+                            MinecraftVersion = mcVersion, 
+                            CurrentFile = libraryJarName, 
+                            Stage = DownloadUpdateStage.ExtractingNativeLibrary 
+                        });
 
                     if (!System.IO.Directory.Exists(downloadLocation + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\"))
                     {
