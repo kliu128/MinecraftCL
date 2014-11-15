@@ -177,7 +177,6 @@ namespace MinecraftCL
             }
 
             // Set up FTB download servers and grab modpack list asynchronously
-            DownloadDialog dDialog = new DownloadDialog();
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += (o, x) =>
                 {
@@ -322,16 +321,12 @@ namespace MinecraftCL
             }
 
             Analytics.StopTiming(TimingsMeasureType.MinecraftCLInitialization);
-
-            FTBUtils.DownloadModpack(FTBLocations.PublicModpacks[0], dDialog, System.Environment.CurrentDirectory + @"\ftb\", mcVersionDynamic);
         }
 
         public void Button_Click(object sender, RoutedEventArgs e)
         {
             // Begin starting the game
             DebugConsole.Print("Starting minecraft version " + ((profileSelection)profileSelectBox.SelectedValue).MojangVersion + ".", "MainWindow");
-            /*
-            downloadVariables downloadVar = new downloadVariables();
 
             startGameVariables sGV = new startGameVariables
             {
@@ -345,6 +340,12 @@ namespace MinecraftCL
                 Version = ((profileSelection)profileSelectBox.SelectedValue).MojangVersion,
                 AutoBackupWorld = autoBackupWorlds
             };
+
+            LaunchGameReturn launchReturn = LaunchGame.BeginLaunch(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
+            /*
+            downloadVariables downloadVar = new downloadVariables();
+
+            
 
             string authenticateReturnString;
             bool authReturn = MinecraftUtils.authenticateMinecraft(ref sGV, out authenticateReturnString);

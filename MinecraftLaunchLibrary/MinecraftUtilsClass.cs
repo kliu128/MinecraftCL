@@ -747,6 +747,9 @@ namespace MinecraftLaunchLibrary
                 // Ex. "\.minecraft\libraries\org\lwjgl\lwjgl\lwjgl\2.9.1-nightly-20131120\lwjgl-2.9.1-nightly-20131120.jar"
                 libraryLocation = @"\.minecraft\libraries\" + libraryDownloadURL[0].Replace('.', '\\') + "\\" + libraryDownloadURL[1] + "\\" + libraryDownloadURL[2] + "\\" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2] + downloadType + ".jar";
                 
+                // Create library folder path if it does not exist.
+                Directory.CreateDirectory(Path.GetDirectoryName(librarySavePath));
+
                 // Download the library.
                 downloadFile(libraryDownloadPath + downloadType + ".jar", 
                     librarySavePath + downloadType + ".jar", 

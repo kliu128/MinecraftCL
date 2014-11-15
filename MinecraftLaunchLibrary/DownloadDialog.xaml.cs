@@ -23,6 +23,7 @@ namespace MinecraftLaunchLibrary
         public DownloadDialog()
         {
             InitializeComponent();
+            this.downloadFileDisplay.Text = "";
             downloadIsInProgress = true;
         }
 
