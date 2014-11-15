@@ -196,12 +196,12 @@ namespace MinecraftCL
                                 downloadStringPrefix = "Downloading asset ";
                                 break;
                             case DownloadUpdateStage.CompletedDownload:
-                                downloadDialog.downloadFileDisplay.Text = "Download completed.";
+                                //downloadDialog.downloadFileDisplay.Text = "Download completed.";
                                 return;
                             default:
                                 throw new Exception();
                         }
-                        downloadDialog.downloadFileDisplay.Text = downloadStringPrefix + x.CurrentFile + " for Minecraft version " + x.MinecraftVersion;
+                        //downloadDialog.downloadFileDisplay.Text = downloadStringPrefix + x.CurrentFile + " for Minecraft version " + x.MinecraftVersion;
                     };
 
                 worker.DoWork += (o, x) =>
@@ -245,6 +245,9 @@ namespace MinecraftCL
                     backupNotificationBox.Close();
                 }
                 #endregion
+
+                LaunchGameReturn gameReturn = StartGame(profile, sGV);
+                return gameReturn;
             }
         }
 
