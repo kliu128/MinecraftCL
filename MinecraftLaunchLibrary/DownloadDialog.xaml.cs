@@ -23,6 +23,7 @@ namespace MinecraftLaunchLibrary
         public DownloadDialog()
         {
             InitializeComponent();
+            downloadIsInProgress = true;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

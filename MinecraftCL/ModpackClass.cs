@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml.Serialization;
 using System.Runtime.Serialization;
 using System.Xml;
+using MinecraftLaunchLibrary;
 
 namespace MinecraftCL
 {
@@ -108,9 +109,9 @@ namespace MinecraftCL
                 // Set the "version" to the vanilla minecraft version specified so getVersionInformation() can find the info
                 // for the vanilla version of minecraft
                 sGV.Version = modpackNode.SelectSingleNode("mcVersion").InnerText;
-                
+
                 string errorInformation;
-                bool minecraftVersionExists = MinecraftUtils.getVersionInformation(ref sGV, out errorInformation);
+                bool minecraftVersionExists = LaunchGame.getVersionInformation(ref sGV, out errorInformation);
 
                 // Set the version to {$modpack-type}-{$modpack-name}
                 sGV.Version = modpackNode.Attributes["type"].Value + "-" + modpackNode.Attributes["name"].Value;

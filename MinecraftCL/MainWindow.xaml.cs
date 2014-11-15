@@ -330,7 +330,7 @@ namespace MinecraftCL
         {
             // Begin starting the game
             DebugConsole.Print("Starting minecraft version " + ((profileSelection)profileSelectBox.SelectedValue).MojangVersion + ".", "MainWindow");
-
+            /*
             downloadVariables downloadVar = new downloadVariables();
 
             startGameVariables sGV = new startGameVariables
@@ -491,11 +491,8 @@ namespace MinecraftCL
                         break;
                 }
             }
+             */
         }
-
-        
-
-        
 
         private void settingsButton_Click(object sender, RoutedEventArgs e)
         {

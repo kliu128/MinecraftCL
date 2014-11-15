@@ -39,7 +39,7 @@ namespace MinecraftCL
         /// <param name="minecraftVersion"></param>
         /// <param name="mcVersionDynamic"></param>
         /// <returns></returns>
-        private static bool checkMinecraftExists(string minecraftVersion, dynamic mcVersionDynamic)
+        public static bool checkMinecraftExists(string minecraftVersion, dynamic mcVersionDynamic)
         {
             // TODO: Rewrite this to be compatible with the official Minecraft launcher's
             // json settings file
@@ -80,7 +80,7 @@ namespace MinecraftCL
         /// <param name="sGV"></param>
         /// <param name="errorInformation"></param>
         /// <returns></returns>
-        private static bool getVersionInformation(ref startGameVariables sGV, out string errorInformation)
+        public static bool getVersionInformation(ref startGameVariables sGV, out string errorInformation)
         {
             // Change out "latest-release" and "latest-snapshot" to the actual versions
             if (sGV.mcVersionDynamic != null)
@@ -171,10 +171,39 @@ namespace MinecraftCL
             {
                 // Version does not exist, begin setting up the download
                 string downloadReturn = "success";
-                downloadVar.DownloadDialog = new DownloadDialog();
-
+                DownloadDialog downloadDialog = new DownloadDialog();
                 LaunchGameReturn? gameReturn = null;
                 BackgroundWorker worker = new BackgroundWorker();
+
+                MinecraftUtils.DownloadUpdateEvent += (x) =>
+                    {
+                        string downloadStringPrefix = null;
+                        switch (x.Stage)
+                        {
+                            case DownloadUpdateStage.DownloadingGenericFile:
+                                downloadStringPrefix = "Downloading file ";
+                                break;
+                            case DownloadUpdateStage.DownloadingLibrary:
+                                downloadStringPrefix = "Downloading library ";
+                                break;
+                            case DownloadUpdateStage.ExtractingNativeLibrary:
+                                downloadStringPrefix = "Extracting library ";
+                                break;
+                            case DownloadUpdateStage.DownloadingMinecraftJar:
+                                downloadStringPrefix = "Downloading Minecraft jar file ";
+                                break;
+                            case DownloadUpdateStage.DownloadingAsset:
+                                downloadStringPrefix = "Downloading asset ";
+                                break;
+                            case DownloadUpdateStage.CompletedDownload:
+                                downloadDialog.downloadFileDisplay.Text = "Download completed.";
+                                return;
+                            default:
+                                throw new Exception();
+                        }
+                        downloadDialog.downloadFileDisplay.Text = downloadStringPrefix + x.CurrentFile + " for Minecraft version " + x.MinecraftVersion;
+                    };
+
                 worker.DoWork += (o, x) =>
                     {
                         // Download the game
@@ -182,8 +211,8 @@ namespace MinecraftCL
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {
-                        downloadVar.DownloadDialog.downloadIsInProgress = false;
-                        downloadVar.DownloadDialog.Close();
+                        downloadDialog.downloadIsInProgress = false;
+                        downloadDialog.Close();
                         if (downloadReturn == "success")
                         {
                             // Start the game

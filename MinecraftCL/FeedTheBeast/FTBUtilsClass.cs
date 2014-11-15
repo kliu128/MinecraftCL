@@ -210,6 +210,8 @@ namespace MinecraftCL.FeedTheBeast
         /// <returns></returns>
         public static bool DownloadModpack(FTBModpack download, DownloadDialog dDialog, string installDir, dynamic mcVersionDynamic)
         {
+            // TODO: Fix
+            /*
             if (Globals.HasInternetConnectivity)
             {
                 // Begin timing FTB modpack download
@@ -271,10 +273,10 @@ namespace MinecraftCL.FeedTheBeast
                             Directory.Move(installDir + @"\minecraft\", installDir + @"\" + download.name);
 
                             // Download the vanilla natives and jar
-                            bool versionExists = MinecraftUtils.checkMinecraftExists(download.mcVersion, mcVersionDynamic);
+                            bool versionExists = LaunchGame.checkMinecraftExists(download.mcVersion, mcVersionDynamic);
                             if (versionExists == false)
                             {
-                                downloadVariables downloadGameVariables = new downloadVariables { DownloadDialog = dDialog, mcInstallDir = installDir, ValidateFiles = false, mcVersion = download.mcVersion };
+                                downloadVariables downloadGameVariables = new downloadVariables { mcInstallDir = installDir, ValidateFiles = false, mcVersion = download.mcVersion };
                                 MinecraftUtils.DownloadGame(downloadGameVariables);
                             }
 
@@ -312,6 +314,8 @@ namespace MinecraftCL.FeedTheBeast
             {
                 return false;
             }
+             * */
+            return true;
         }
 
         /// <summary>

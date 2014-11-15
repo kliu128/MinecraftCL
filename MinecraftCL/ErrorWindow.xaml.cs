@@ -37,6 +37,8 @@ namespace MinecraftCL
 
         private void startMinecraft_Click(object sender, RoutedEventArgs e)
         {
+            // TODO: Fix
+            /*
             WindowState = System.Windows.WindowState.Minimized;
             ShowInTaskbar = false;
             Hide();
@@ -64,11 +66,13 @@ namespace MinecraftCL
             }
             ShowInTaskbar = true;
             WindowState = System.Windows.WindowState.Normal;
-            Show();
+            Show();*/
         }
 
         private void validateMinecraftButton_Click(object sender, RoutedEventArgs e)
         {
+            // TODO: Fix
+            /*
             downloaderVariables.ValidateFiles = true;
             downloaderVariables.DownloadDialog = new DownloadDialog();
             string downloadReturn = "success";
@@ -96,7 +100,7 @@ namespace MinecraftCL
             
 
             // Show download window
-            downloaderVariables.DownloadDialog.ShowDialog();
+            downloaderVariables.DownloadDialog.ShowDialog();*/
         }
     }
 }
