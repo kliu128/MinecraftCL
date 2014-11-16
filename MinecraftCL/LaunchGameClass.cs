@@ -176,7 +176,7 @@ namespace MinecraftCL
                 LaunchGameReturn? gameReturn = null;
                 BackgroundWorker worker = new BackgroundWorker();
 
-                MinecraftUtils.DownloadUpdateEvent += (x) =>
+                MinecraftUtils.DownloadUpdateEventHandler downloadUpdateDelegate = delegate(DownloadUpdateEventArgs x)
                     {
                         string downloadStringPrefix = null;
                         switch (x.Stage)
@@ -204,6 +204,8 @@ namespace MinecraftCL
                         }
                         downloadDialog.downloadUpdateInfo = downloadStringPrefix + x.CurrentFile + " for Minecraft version " + x.MinecraftVersion;
                     };
+                MinecraftUtils.DownloadUpdateEvent += downloadUpdateDelegate;
+
                 bool downloadError = false;
                 worker.DoWork += (o, x) =>
                     {
@@ -212,6 +214,7 @@ namespace MinecraftCL
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {
+                        MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
                         downloadDialog.downloadIsInProgress = false;
                         downloadDialog.Close();
                         if (downloadReturn == "success")
@@ -226,7 +229,7 @@ namespace MinecraftCL
                 // Start the download thread, and show the download dialog.
                 worker.RunWorkerAsync();
                 downloadDialog.ShowDialog();
-                
+
                 // This will wait until either the game has started and ended, or until a download error occurs.
                 while (gameReturn == null && downloadError == false);
 

@@ -261,8 +261,6 @@ namespace MinecraftLaunchLibrary
             startInfo.Arguments = pArguments.Replace("%mcInstallDir%", sGV.InstallDir);
             startInfo.WorkingDirectory = sGV.InstallDir;
 
-            
-
             // Start Minecraft and return
             Process mcProc = Process.Start(startInfo);
             return new startGameReturn { MinecraftProcess = mcProc, StartInfo = startInfo, ReturnCode = startMinecraftReturnCode.StartedMinecraft, ErrorInfo = "", LaunchParameters = startInfo.Arguments };
@@ -279,8 +277,6 @@ namespace MinecraftLaunchLibrary
             // Notify the user that we are downloading
             if (DownloadUpdateEvent != null)
                 DownloadUpdateEvent(downloadEventArgs);
-
-            Thread.Sleep(20000);
 
             if (validateFiles == true)
             {
