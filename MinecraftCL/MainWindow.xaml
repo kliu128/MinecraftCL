@@ -4,7 +4,7 @@
         Title="MinecraftCL" Height="263.075" Width="240"
         WindowStyle="ThreeDBorderWindow" ResizeMode="NoResize" 
         ShowInTaskbar="True">
-    <Grid Margin="10,10,7,11">
+    <Grid x:Name="ControlsGrid" Margin="10,10,7,11">
         <TextBox x:Name="usernameBox" GotFocus="usernameBox_GotFocus" HorizontalAlignment="Left" Height="20" TextWrapping="Wrap" VerticalAlignment="Top" Width="200"/>
         <Button x:Name="settingsButton" Content="Settings" HorizontalAlignment="Left" Margin="125,49,0,0" Click="settingsButton_Click" VerticalAlignment="Top" Width="75"/>
         <Button x:Name="playButton" IsDefault="True" Content="Play!" Click="Button_Click"  HorizontalAlignment="Left" Margin="0,74,0,0" VerticalAlignment="Top" Width="200" Height="40"/>

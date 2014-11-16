@@ -23,8 +23,8 @@ namespace MinecraftCL
     public partial class ErrorWindow : Window
     {
         startGameVariables sGameVariables;
-        downloadVariables downloaderVariables;
-        public ErrorWindow(startGameVariables sGV, downloadVariables _downloaderVariables)
+        profileSelection usedProfile;
+        public ErrorWindow(profileSelection profile, startGameVariables sGV)
         {
             InitializeComponent();
             this.Activate();
@@ -32,7 +32,7 @@ namespace MinecraftCL
             this.Focus();
 
             sGameVariables = sGV;
-            downloaderVariables = _downloaderVariables;
+            usedProfile = profile;
         }
 
         private void startMinecraft_Click(object sender, RoutedEventArgs e)

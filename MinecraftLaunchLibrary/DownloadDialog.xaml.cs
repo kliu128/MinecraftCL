@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -19,6 +20,11 @@ namespace MinecraftLaunchLibrary
     public partial class DownloadDialog : Window
     {
         public bool downloadIsInProgress { get; set; }
+        public string downloadUpdateInfo
+        { 
+            get { return downloadFileDisplay.Text; }
+            set { downloadFileDisplay.Text = value; }
+        }
 
         public DownloadDialog()
         {
@@ -34,7 +40,10 @@ namespace MinecraftLaunchLibrary
             {
                 e.Cancel = false;
                 MessageBoxResult stopDownloadResult = MessageBox.Show(
-                    "Closing the window will close the program and cause the download to be unfinished. You will need to revalidate minecraft files. Are you sure you want to cancel the download?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+                    "Closing the window will close the program and cause the download to be unfinished. " +
+                    "You will need to revalidate minecraft files. Are you sure you want to cancel the download?", 
+                    "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+
                 if (stopDownloadResult == MessageBoxResult.Yes)
                 {
                     Application.Current.Shutdown(0);

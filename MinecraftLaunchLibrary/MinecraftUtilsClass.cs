@@ -13,6 +13,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Helpers;
 using System.Web.Script.Serialization;
@@ -66,6 +67,7 @@ namespace MinecraftLaunchLibrary
         public Process MinecraftProcess;
         public startMinecraftReturnCode ReturnCode;
         public string ErrorInfo;
+        public string LaunchParameters;
     }
 
     public enum DownloadUpdateStage
@@ -263,7 +265,7 @@ namespace MinecraftLaunchLibrary
 
             // Start Minecraft and return
             Process mcProc = Process.Start(startInfo);
-            return new startGameReturn { MinecraftProcess = mcProc, StartInfo = startInfo, ReturnCode = startMinecraftReturnCode.StartedMinecraft, ErrorInfo = "" };
+            return new startGameReturn { MinecraftProcess = mcProc, StartInfo = startInfo, ReturnCode = startMinecraftReturnCode.StartedMinecraft, ErrorInfo = "", LaunchParameters = startInfo.Arguments };
         }        
         ///
         private static int downloadFile(string downloadLocation, string saveLocation, bool validateFiles, DownloadUpdateEventArgs downloadEventArgs, long specifiedFileSize = new long())
@@ -277,6 +279,8 @@ namespace MinecraftLaunchLibrary
             // Notify the user that we are downloading
             if (DownloadUpdateEvent != null)
                 DownloadUpdateEvent(downloadEventArgs);
+
+            Thread.Sleep(20000);
 
             if (validateFiles == true)
             {

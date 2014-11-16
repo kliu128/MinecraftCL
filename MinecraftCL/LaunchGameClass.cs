@@ -20,7 +20,8 @@ namespace MinecraftCL
         CouldNotLocateJava,
         MinecraftError,
         AuthenticationError,
-        VersionInformationError
+        VersionInformationError,
+        DownloadError
     }
 
     public struct LaunchGameReturn
@@ -196,14 +197,14 @@ namespace MinecraftCL
                                 downloadStringPrefix = "Downloading asset ";
                                 break;
                             case DownloadUpdateStage.CompletedDownload:
-                                downloadDialog.downloadFileDisplay.Text = "Download completed.";
+                                downloadDialog.downloadUpdateInfo = "Download completed.";
                                 return;
                             default:
                                 throw new Exception();
                         }
-                        downloadDialog.downloadFileDisplay.Text = downloadStringPrefix + x.CurrentFile + " for Minecraft version " + x.MinecraftVersion;
+                        downloadDialog.downloadUpdateInfo = downloadStringPrefix + x.CurrentFile + " for Minecraft version " + x.MinecraftVersion;
                     };
-
+                bool downloadError = false;
                 worker.DoWork += (o, x) =>
                     {
                         // Download the game
@@ -218,14 +219,23 @@ namespace MinecraftCL
                             // Start the game
                             gameReturn = StartGame(profile, sGV);
                         }
+                        else
+                            downloadError = true;
                     };
+
+                // Start the download thread, and show the download dialog.
                 worker.RunWorkerAsync();
-
                 downloadDialog.ShowDialog();
+                
+                // This will wait until either the game has started and ended, or until a download error occurs.
+                while (gameReturn == null && downloadError == false);
 
-                while (gameReturn == null);
-
-                return (LaunchGameReturn)gameReturn;
+                if (downloadError == true)
+                    // If there was a download error, forward it to the caller.
+                    return new LaunchGameReturn { returnType = LaunchReturnType.DownloadError, returnInfo = downloadReturn };
+                else
+                    // Otherwise return the LaunchGameReturn provided by StartGame();
+                    return (LaunchGameReturn)gameReturn;
             }
             else
             {
@@ -321,6 +331,7 @@ namespace MinecraftCL
                 {
                     returnInfo = javaError;
                 }
+                returnInfo += Environment.NewLine + Environment.NewLine + "Launch parameters: " + startReturn.LaunchParameters;
                 return new LaunchGameReturn { returnInfo = returnInfo, returnType = LaunchReturnType.MinecraftError };
             }
             else if (exitCode == 0)

@@ -328,6 +328,8 @@ namespace MinecraftCL
             // Begin starting the game
             DebugConsole.Print("Starting minecraft version " + ((profileSelection)profileSelectBox.SelectedValue).MojangVersion + ".", "MainWindow");
 
+            ControlsGrid.IsEnabled = false;
+
             startGameVariables sGV = new startGameVariables
             {
                 Username = usernameBox.Text,
@@ -342,157 +344,38 @@ namespace MinecraftCL
             };
 
             LaunchGameReturn launchReturn = LaunchGame.BeginLaunch(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
-            /*
-            downloadVariables downloadVar = new downloadVariables();
 
-            
-
-            string authenticateReturnString;
-            bool authReturn = MinecraftUtils.authenticateMinecraft(ref sGV, out authenticateReturnString);
-            debugLabel.Text = authenticateReturnString;
-
-            if (authReturn == false)
+            if (launchReturn.returnType == LaunchReturnType.SuccessfulLaunch)
+                this.Close();
+            else if (launchReturn.returnType == LaunchReturnType.AuthenticationError)
             {
-                DebugConsole.Print("Could not authenticate using Yggdrasil for " + usernameBox.Text, "MainWindow", "WARN");
-                return;
-            }
-
-            // This function retrieves the list of required libraries for minecraft, substitutes in the
-            // authentication information, and replaces the "latest-release" and "latest-snapshot" with
-            // the actual versions.
-            string versionErrorInfo;
-            bool getVersionReturn = MinecraftUtils.getVersionInformation(ref sGV, out versionErrorInfo);
-            
-            if (versionErrorInfo != "")
-            {
-                debugLabel.Text = versionErrorInfo;
-                return;
-            }
-            
-            string downloadReturn = "success";
-
-            downloadVar.mcVersion = ((profileSelection)profileSelectBox.SelectedValue).MojangVersion;
-            downloadVar.mcInstallDir = mcInstallDir;
-            downloadVar.ValidateFiles = false;
-
-            if (getVersionReturn == false)
-            {
-                // Disable all UI elements
-                usernameBox.IsEnabled = false;
-                usernameBox.Foreground = Brushes.Gray;
-                passwordBox.IsEnabled = false;
-                passwordBox.Foreground = Brushes.Gray;
-                settingsButton.IsEnabled = false;
-                playButton.IsEnabled = false;
-                playButton.Foreground = Brushes.Gray;
-                profileSelectBox.IsEnabled = false;
-                profileSelectBox.Foreground = Brushes.Gray;
-
-                downloadVar.DownloadDialog = new DownloadDialog();
-
-                // Create new thread to download files
-                var worker = new BackgroundWorker();
-                worker.DoWork += (o, x) =>
-                    {
-                        // Fill in the values for downloading and begin
-                        // downloading game files
-                        downloadReturn = MinecraftUtils.DownloadGame(downloadVar);
-                    };
-                worker.RunWorkerCompleted += (o, x) =>
-                    {
-                        downloadVar.DownloadDialog.downloadIsInProgress = false;
-
-                        if (downloadReturn == "success")
-                        {
-                            // If the download was successful, get the version information and start the game
-                            getVersionReturn = MinecraftUtils.getVersionInformation(ref sGV, out versionErrorInfo);
-                            if (versionErrorInfo != "")
-                            {
-                                debugLabel.Text = versionErrorInfo;
-                                return;
-                            }
-
-                            WindowState = System.Windows.WindowState.Minimized;
-                            ShowInTaskbar = false;
-                            Hide();
-
-                            var startGameResult = MinecraftUtils.Start(sGV);
-                            switch (startGameResult.ReturnCode)
-                            {
-                                case startMinecraftReturnCode.StartedMinecraft:
-                                    // We're golden! Close the program
-                                    this.Close();
-                                    break;
-                                case startMinecraftReturnCode.CouldNotLocateJava:
-                                    Show();
-                                    ShowInTaskbar = true;
-                                    WindowState = System.Windows.WindowState.Normal;
-
-                                    debugLabel.Text = "Could not locate Java. Install Java or specify a custom java path in the profile settings.";
-                                    break;
-                                case startMinecraftReturnCode.MinecraftError:
-                                    // Looks like minecraft encountered an error. :(
-                                    ErrorWindow eWindow = new ErrorWindow(sGV, downloadVar);
-                                    eWindow.errorMessageBox.Text = startGameResult.Error;
-                                    eWindow.Show();
-
-                                    this.Close();
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            // Display the error, if there was one
-                            debugLabel.Text = downloadReturn;
-
-                            // Reenable UI elements
-                            usernameBox.IsEnabled = true;
-                            usernameBox.Foreground = Brushes.Black;
-                            passwordBox.IsEnabled = true;
-                            passwordBox.Foreground = Brushes.Black;
-                            settingsButton.IsEnabled = true;
-                            playButton.IsEnabled = true;
-                            playButton.Foreground = Brushes.Black;
-                            profileSelectBox.IsEnabled = true;
-                            profileSelectBox.Foreground = Brushes.Black;
-                        }
-                    };
-                worker.WorkerReportsProgress = true;
-                worker.RunWorkerAsync();
-                downloadVar.DownloadDialog.downloadIsInProgress = true;
-                downloadVar.DownloadDialog.ShowDialog();
+                // do stuff
             }
             else
             {
-                WindowState = System.Windows.WindowState.Minimized;
-                ShowInTaskbar = false;
-                Hide();
-                    
-                var startGameResult = MinecraftUtils.Start(sGV);
-                switch (startGameResult.ReturnCode)
+                ErrorWindow errorWindow = new ErrorWindow(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
+                errorWindow.errorMessageBox.Text = launchReturn.returnInfo;
+                switch (launchReturn.returnType)
                 {
-                    case startMinecraftReturnCode.StartedMinecraft:
-                        // We're golden! Close the program
-                        this.Close();
+                    case LaunchReturnType.CouldNotLocateJava:
+                        errorWindow.errorTypeBox.Content = "We could not locate your Java installation. Try reinstalling Java.";
                         break;
-                    case startMinecraftReturnCode.CouldNotLocateJava:
-                        Show();
-                        ShowInTaskbar = true;
-                        WindowState = System.Windows.WindowState.Normal;
-
-                        debugLabel.Text = "Could not locate Java. Install Java or specify a custom java path in the profile settings.";
+                    case LaunchReturnType.MinecraftError:
+                        errorWindow.errorTypeBox.Content = "It looks like an error occurred while running Minecraft.";
                         break;
-                    case startMinecraftReturnCode.MinecraftError:
-                        // Looks like minecraft encountered an error. :(
-                        ErrorWindow eWindow = new ErrorWindow(sGV, downloadVar);
-                        eWindow.errorMessageBox.Text = startGameResult.Error;
-                        eWindow.Show();
-
-                        this.Close();
+                    case LaunchReturnType.VersionInformationError:
+                        errorWindow.errorTypeBox.Content = "It looks like an error occurred while getting Minecraft version info.";
                         break;
+                    case LaunchReturnType.DownloadError:
+                        errorWindow.errorTypeBox.Content = "It looks like an error occurred while downloading.";
+                        break;
+                    default:
+                        throw new Exception();
                 }
+                errorWindow.ShowDialog();
             }
-             */
+
+            ControlsGrid.IsEnabled = true;
         }
 
         private void settingsButton_Click(object sender, RoutedEventArgs e)
