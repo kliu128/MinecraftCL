@@ -64,23 +64,6 @@ namespace MinecraftCL
             
             DebugConsole.Print("Begin start of MinecraftCL MainWindow.xaml.cs at " + DateTime.Now + ".", "MainWindow");
 
-            #region Internet Check
-            // Opens connection to google.com to check internet connectivity
-            try
-            {
-                using (var client = new WebClient())
-                using (var stream = client.OpenRead("http://www.google.com"))
-                {
-                    Globals.HasInternetConnectivity = true;
-                }
-            }
-            catch
-            {
-                Globals.HasInternetConnectivity = false;
-                playButton.Content = "Play Offline!";
-            }
-            #endregion
-
             #region Infrastructure Check (Check if configuration XMLs and updater exist, download/create them if needed. Also set up FTB download servers)
             // Create .mcl directory
             if (!Directory.Exists(System.Environment.CurrentDirectory + @"\.mcl\"))
