@@ -105,8 +105,13 @@ namespace MinecraftLaunchLibrary
         }
 
         public delegate void DownloadUpdateEventHandler(DownloadUpdateEventArgs e);
-
         public static event DownloadUpdateEventHandler DownloadUpdateEvent;
+        private static void TriggerDownloadUpdateEvent(DownloadUpdateEventArgs e)
+        {
+            DownloadUpdateEventHandler eventCopy = DownloadUpdateEvent;
+            if (eventCopy != null)
+                eventCopy(e);
+        }
 
         public static bool authenticateMinecraft(ref startGameVariables sGV, out string returnString)
         {
@@ -254,8 +259,8 @@ namespace MinecraftLaunchLibrary
             // Start Minecraft and return
             Process mcProc = Process.Start(startInfo);
             return new startGameReturn { MinecraftProcess = mcProc, StartInfo = startInfo, ReturnCode = startMinecraftReturnCode.StartedMinecraft, ErrorInfo = "", LaunchParameters = startInfo.Arguments };
-        }        
-        ///
+        }
+
         private static int downloadFile(string downloadLocation, string saveLocation, bool validateFiles, DownloadUpdateEventArgs downloadEventArgs, long specifiedFileSize = new long())
         {
             // return code 0 = downloaded file
@@ -265,8 +270,7 @@ namespace MinecraftLaunchLibrary
             int returnValue = 0;
 
             // Notify the user that we are downloading
-            if (DownloadUpdateEvent != null)
-                DownloadUpdateEvent(downloadEventArgs);
+            TriggerDownloadUpdateEvent(downloadEventArgs);
 
             if (validateFiles == true)
             {
@@ -587,8 +591,7 @@ namespace MinecraftLaunchLibrary
                 }
 
                 // Trigger event for download completion
-                if (DownloadUpdateEvent != null)
-                    DownloadUpdateEvent(new DownloadUpdateEventArgs
+                TriggerDownloadUpdateEvent(new DownloadUpdateEventArgs
                     {
                         CurrentFile = null,
                         MinecraftVersion = mcVersion,
@@ -755,8 +758,7 @@ namespace MinecraftLaunchLibrary
                 if (extractNative == true)
                 {
                     // Trigger download progress update event for extracting natives
-                    if (DownloadUpdateEvent != null)
-                        DownloadUpdateEvent(new DownloadUpdateEventArgs
+                    TriggerDownloadUpdateEvent(new DownloadUpdateEventArgs
                         { 
                             MinecraftVersion = mcVersion, 
                             CurrentFile = libraryJarName, 
