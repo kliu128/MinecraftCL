@@ -6,11 +6,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Text;
-using System.Web.Helpers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Xml;
 using System.Xml.Serialization;
 

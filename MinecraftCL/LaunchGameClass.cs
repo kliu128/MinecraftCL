@@ -1,16 +1,9 @@
-﻿using MinecraftCL.FeedTheBeast;
-using MinecraftLaunchLibrary;
+﻿using MinecraftLaunchLibrary;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Windows;
 using System.Xml;
-using System.Xml.Serialization;
 
 namespace MinecraftCL
 {

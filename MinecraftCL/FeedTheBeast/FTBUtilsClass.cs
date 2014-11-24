@@ -1,17 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using MinecraftLaunchLibrary;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Text;
+using System.Net.NetworkInformation;
 using System.Web.Helpers;
 using System.Xml;
-using System.Xml.Serialization;
-using Ionic.Zip;
-using MinecraftLaunchLibrary;
-using System.Net.NetworkInformation;
 
 namespace MinecraftCL.FeedTheBeast
 {
