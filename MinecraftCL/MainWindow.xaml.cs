@@ -128,32 +128,29 @@ namespace MinecraftCL
             }
 
             // Download MinecraftCLUpdater
-            if (Globals.HasInternetConnectivity == true)
+            HttpWebResponse updaterFileResponse = null;
+            try
             {
-                HttpWebResponse updaterFileResponse = null;
-                try
+                HttpWebRequest updaterFile = (HttpWebRequest)WebRequest.Create("http://mcdonecreative.dynu.net/MinecraftCL/MinecraftCLUpdater.exe");
+                updaterFile.Method = "HEAD";
+                updaterFile.Timeout = 5000;
+                updaterFileResponse = (HttpWebResponse)updaterFile.GetResponse();
+            }
+            catch (Exception)
+            {
+                DebugConsole.Print("Could not check for an update to the updater.", "MainWindow", "WARN");
+            }
+            finally
+            {
+                if (updaterFileResponse != null && updaterFileResponse.StatusCode == HttpStatusCode.OK)
                 {
-                    HttpWebRequest updaterFile = (HttpWebRequest)WebRequest.Create("http://mcdonecreative.dynu.net/MinecraftCL/MinecraftCLUpdater.exe");
-                    updaterFile.Method = "HEAD";
-                    updaterFile.Timeout = 5000;
-                    updaterFileResponse = (HttpWebResponse)updaterFile.GetResponse();
-                }
-                catch (Exception)
-                {
-                    DebugConsole.Print("Could not check for an update to the updater.", "MainWindow", "WARN");
-                }
-                finally
-                {
-                    if (updaterFileResponse != null && updaterFileResponse.StatusCode == HttpStatusCode.OK)
+                    DateTime localFileModifiedTime = File.GetLastWriteTime(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe");
+                    DateTime onlineFileModifiedTime = updaterFileResponse.LastModified;
+                    if (onlineFileModifiedTime > localFileModifiedTime)
                     {
-                        DateTime localFileModifiedTime = File.GetLastWriteTime(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe");
-                        DateTime onlineFileModifiedTime = updaterFileResponse.LastModified;
-                        if (onlineFileModifiedTime > localFileModifiedTime)
+                        using (WebClient wC = new WebClient())
                         {
-                            using (WebClient wC = new WebClient())
-                            {
-                                wC.DownloadFile("http://mcdonecreative.dynu.net/MinecraftCL/MinecraftCLUpdater.exe", System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe");
-                            }
+                            wC.DownloadFile("http://mcdonecreative.dynu.net/MinecraftCL/MinecraftCLUpdater.exe", System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe");
                         }
                     }
                 }
@@ -171,7 +168,7 @@ namespace MinecraftCL
             #endregion
 
             #region Update Check
-            if (Globals.HasInternetConnectivity == true && File.Exists(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe"))
+            if (File.Exists(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe"))
             {
                 HttpStatusCode? status = null;
                 HttpWebResponse response = null;
@@ -185,14 +182,10 @@ namespace MinecraftCL
                 }
                 catch (Exception e)
                 {
-                    MessageWindow updateErrorWindow = new MessageWindow();
-                    updateErrorWindow.closeTimeoutMilliseconds = 2500;
                     if (e is WebException)
-                        updateErrorWindow.messageText.Text = "Warning: Could not connect to the update server.";
+                        DebugConsole.Print("Could not connect to the update server.", "MainWindow()", "WARN");
                     else
-                        updateErrorWindow.messageText.Text = "An error occurred during the update check. " + e;
-
-                    updateErrorWindow.ShowDialog();
+                        DebugConsole.Print("An error occurred during the update check. " + e, "MainWindow()", "ERROR");
                 }
                 finally
                 {
@@ -278,31 +271,6 @@ namespace MinecraftCL
                 }
             }
 
-            // Get version info
-            if (Globals.HasInternetConnectivity == true)
-            {
-                try
-                {
-                    using (WebClient webClient = new WebClient())
-                    {
-                        webClient.DownloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/versions.json", System.Environment.CurrentDirectory + @"\.mcl\versions.json");
-                    }
-                    string mcVersionJSONString;
-                    using (StreamReader streamReader = new StreamReader(System.Environment.CurrentDirectory + @"\.mcl\versions.json", Encoding.UTF8))
-                    {
-                        mcVersionJSONString = streamReader.ReadToEnd();
-                    }
-                    mcVersionDynamic = Json.Decode(mcVersionJSONString);
-                }
-                catch (WebException wE)
-                {
-                    MessageWindow downloadErrorWindow = new MessageWindow();
-                    downloadErrorWindow.messageText.Text = "Could not connect to Mojang servers. Exception: " + wE.Message;
-                    downloadErrorWindow.closeTimeoutMilliseconds = 2500;
-                    downloadErrorWindow.ShowDialog();
-                }
-            }
-
             Analytics.StopTiming(TimingsMeasureType.MinecraftCLInitialization);
         }
 
@@ -320,7 +288,6 @@ namespace MinecraftCL
 
                 InstallDir = mcInstallDir,
                 LastUsedProfile = ((profileSelection)profileSelectBox.SelectedItem).ToString(),
-                mcVersionDynamic = mcVersionDynamic,
                 JavaArguments = ((profileSelection)profileSelectBox.SelectedValue).javaArguments,
                 Version = ((profileSelection)profileSelectBox.SelectedValue).MojangVersion,
                 AutoBackupWorld = autoBackupWorlds

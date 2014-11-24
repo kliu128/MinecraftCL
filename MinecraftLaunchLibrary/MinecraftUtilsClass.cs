@@ -44,7 +44,6 @@ namespace MinecraftLaunchLibrary
 
         public string LastUsedProfile { get; set; }
         public bool AutoBackupWorld { get; set; }
-        public dynamic mcVersionDynamic { get; set; }
 
         #region Authentication Variables
         public string AccessToken { get; set; }

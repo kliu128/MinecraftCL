@@ -9,7 +9,6 @@ namespace MinecraftCL
 {
     static class Globals
     {
-        public static bool HasInternetConnectivity { get; set; }
         public static bool DebugOn { get; set; }
         public static bool SendAnalytics { get; set; }
 

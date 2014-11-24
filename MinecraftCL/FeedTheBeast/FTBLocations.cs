@@ -8,11 +8,14 @@ namespace MinecraftCL.FeedTheBeast
 {
     public static class FTBLocations
     {
-        public const string FTB2 = "FTB2/";
-        public const string FTB2Static = "FTB2/static/";
+        public const string FTB2 = "/FTB2/";
+        public const string FTB2Static = "/FTB2/static/";
 
-        public const string CurseCDN = "http://ftb.cursecdn.com/";
-        public const string CreeperRepo = "http://new.creeperrepo.net/";
+        public const string CurseCDN = "http://" + CurseCDNHostName;
+        public const string CreeperRepo = "http://" + CreeperRepoHostName;
+
+        public const string CurseCDNHostName = "ftb.cursecdn.com";
+        public const string CreeperRepoHostName = "new.creeperrepo.net";
 
         public const string FullFTBMavenRepo = CurseCDN + FTB2 + "maven/";
 

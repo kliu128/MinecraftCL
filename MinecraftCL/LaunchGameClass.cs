@@ -40,10 +40,12 @@ namespace MinecraftCL
         /// <param name="minecraftVersion"></param>
         /// <param name="mcVersionDynamic"></param>
         /// <returns></returns>
-        public static bool checkMinecraftExists(string minecraftVersion, dynamic mcVersionDynamic)
+        public static bool checkMinecraftExists(string minecraftVersion)
         {
             // TODO: Rewrite this to be compatible with the official Minecraft launcher's
             // json settings file
+
+            dynamic mcVersionDynamic = MinecraftServerUtils.GetVersionsJson();
 
             // Open VersionInformation.xml
             XmlDocument doc = new XmlDocument();
@@ -83,16 +85,18 @@ namespace MinecraftCL
         /// <returns></returns>
         public static bool getVersionInformation(ref startGameVariables sGV, out string errorInformation)
         {
+            dynamic mcVersionDynamic = MinecraftServerUtils.GetVersionsJson();
+
             // Change out "latest-release" and "latest-snapshot" to the actual versions
-            if (sGV.mcVersionDynamic != null)
+            if (mcVersionDynamic != null)
             {
                 if (sGV.Version == "latest-release")
                 {
-                    sGV.Version = sGV.mcVersionDynamic.latest.release;
+                    sGV.Version = mcVersionDynamic.latest.release;
                 }
                 else if (sGV.Version == "latest-snapshot")
                 {
-                    sGV.Version = sGV.mcVersionDynamic.latest.snapshot;
+                    sGV.Version = mcVersionDynamic.latest.snapshot;
                 }
             }
             else if (sGV.Version == "latest-release" || sGV.Version == "latest-snapshot")
@@ -107,7 +111,7 @@ namespace MinecraftCL
             string mcAssetsVersion = "";
             string startingArguments = "";
 
-            if (checkMinecraftExists(sGV.Version, sGV.mcVersionDynamic) == true)
+            if (checkMinecraftExists(sGV.Version) == true)
             {
                 // Version already exists
                 versionExists = true;
