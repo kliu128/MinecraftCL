@@ -18,32 +18,29 @@ namespace MinecraftCL.FeedTheBeast
     public static class FTBUtils
     {
         private static bool cachedFTBServerConnectivity = false;
-        public static bool FTBServerConnectivity
+        public static bool GetFTBServerConnectivity()
         {
-            get
+            if (cachedFTBServerConnectivity == true)
+                return true;
+            else
             {
-                if (cachedFTBServerConnectivity == true)
-                    return true;
-                else
+                // Opens connection to FTB servers to check internet connectivity.
+                // It will check either the first time it is called, or every time
+                // if there is no internet connection available.
+                try
                 {
-                    // Opens connection to FTB servers to check internet connectivity.
-                    // It will check either the first time it is called, or every time
-                    // if there is no internet connection available.
-                    try
-                    {
-                        Ping p = new Ping();
-                        p.Send(FTBLocations.CurseCDNHostName);
-                        p.Send(FTBLocations.CreeperRepoHostName);
-                    }
-                    catch
-                    {
-                        cachedFTBServerConnectivity = false;
-                        return cachedFTBServerConnectivity;
-                    }
-                    // Only reaches here when all tests pass without error.
-                    cachedFTBServerConnectivity = true;
+                    Ping p = new Ping();
+                    p.Send(FTBLocations.CurseCDNHostName);
+                    p.Send(FTBLocations.CreeperRepoHostName);
+                }
+                catch
+                {
+                    cachedFTBServerConnectivity = false;
                     return cachedFTBServerConnectivity;
                 }
+                // Only reaches here when all tests pass without error.
+                cachedFTBServerConnectivity = true;
+                return cachedFTBServerConnectivity;
             }
         }
 
@@ -59,7 +56,7 @@ namespace MinecraftCL.FeedTheBeast
         {
             // Much things copied from the FTB launcher to figure out what
             // it does.
-            if (FTBUtils.FTBServerConnectivity)
+            if (FTBUtils.GetFTBServerConnectivity())
             {
                 #region Check server balance and select master server
                 HttpStatusCode? status = null;
