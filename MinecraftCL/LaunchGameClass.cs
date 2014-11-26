@@ -31,7 +31,6 @@ namespace MinecraftCL
         /// False = Version must be downloaded
         /// </summary>
         /// <param name="minecraftVersion"></param>
-        /// <param name="mcVersionDynamic"></param>
         /// <returns></returns>
         public static bool checkMinecraftExists(string minecraftVersion)
         {

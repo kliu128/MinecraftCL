@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Web.Helpers;
 using System.Xml;
 
 namespace MinecraftCL.FeedTheBeast
@@ -60,7 +59,7 @@ namespace MinecraftCL.FeedTheBeast
                 try
                 {
                     // Contact the curse server for the balance json
-                    HttpWebRequest request = WebRequest.Create(FTBLocations.CurseCDN + "FTB2/static/balance.json") as HttpWebRequest;
+                    HttpWebRequest request = WebRequest.Create(FTBLocations.CurseCDN + "/FTB2/static/balance.json") as HttpWebRequest;
                     response = request.GetResponse() as HttpWebResponse;
                     status = response.StatusCode;
 
@@ -71,6 +70,7 @@ namespace MinecraftCL.FeedTheBeast
                     error.messageText.Text = "Could not connect to Curse CDN. " + e.Message;
                     error.closeTimeoutMilliseconds = 10000;
                     error.Show();
+                    DebugConsole.Print("Could not connect to Curse CDN: " + e.Message, "FTBUtils.InitializeDLServers()", "ERROR");
                     return false;
                 }
                 if (status != null && status == HttpStatusCode.OK)
@@ -86,11 +86,9 @@ namespace MinecraftCL.FeedTheBeast
                         }
                     }
 
-                    var curseBalanceJSON = Json.Decode(curseCDNBalanceJSONString);
-
+                    dynamic curseBalanceJSON = JsonConvert.DeserializeObject(curseCDNBalanceJSONString);
                     // INFO: There is also a "minimumLauncherVersion" json node in the ftblauncher code,
                     // but I don't think it is required.
-
                     if (curseBalanceJSON.repoSplitCurse != null)
                     {
                         // Not sure what the repoSplitCurse thing is on the servers, 
@@ -98,14 +96,14 @@ namespace MinecraftCL.FeedTheBeast
 
                         // This function compares repoSplitCurse to a random double between 0.0 and 1.0
                         // to determine what server to use.
-                        if (double.Parse(curseBalanceJSON.repoSplitCurse, System.Globalization.CultureInfo.InvariantCulture) > r.NextDouble())
+                        if (double.Parse((string)curseBalanceJSON.repoSplitCurse, System.Globalization.CultureInfo.InvariantCulture) > r.NextDouble())
                         {
-                            DebugConsole.Print("Balance has selected Automatic:CurseCDN.", "FTBUtils.InitializeDLServers");
+                            DebugConsole.Print("Balance has selected Automatic:CurseCDN.", "FTBUtils.InitializeDLServers()");
                             FTBLocations.SetMasterDownloadRepo(FTBLocations.CurseCDN);
                         }
                         else
                         {
-                            DebugConsole.Print("Balance has selected Automatic:CreeperRepo.", "FTBUtils.InitializeDLServers");
+                            DebugConsole.Print("Balance has selected Automatic:CreeperRepo.", "FTBUtils.InitializeDLServers()");
                             FTBLocations.SetMasterDownloadRepo(FTBLocations.CreeperRepo);
                         }
                     }

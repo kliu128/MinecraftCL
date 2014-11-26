@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,9 @@ namespace MinecraftCL
                 if (!File.Exists(System.Environment.CurrentDirectory + @"\.mcl\Console.log"))
                     File.Create(System.Environment.CurrentDirectory + @"\.mcl\Console.log");
 
-                File.AppendAllText(System.Environment.CurrentDirectory + @"\.mcl\Console.log", "[" + DateTime.Now + "] [" + messageType + "] [" + senderType + "]: " + message + Environment.NewLine);
+                string logLine = "[" + DateTime.Now + "] [" + messageType + "] [" + senderType + "]: " + message;
+                File.AppendAllText(System.Environment.CurrentDirectory + @"\.mcl\Console.log", logLine + Environment.NewLine);
+                Debug.WriteLine(logLine);
             }
         }
     }
