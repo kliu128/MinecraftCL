@@ -167,7 +167,7 @@ namespace MinecraftCL
             if (!mcVersionExists)
             {
                 // Version does not exist, begin setting up the download
-                string downloadReturn = "success";
+                downloadGameReturn downloadReturn = new downloadGameReturn();
                 DownloadDialog downloadDialog = new DownloadDialog();
                 LaunchGameReturn? gameReturn = null;
                 BackgroundWorker worker = new BackgroundWorker();
@@ -220,8 +220,14 @@ namespace MinecraftCL
                         MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
                         downloadDialog.downloadIsInProgress = false;
                         downloadDialog.Close();
-                        if (downloadReturn == "success")
+                        if (downloadReturn.ReturnValue == "success")
                         {
+                            // Piece together the downloaded library arguments.
+                            foreach (string library in downloadReturn.DownloadedLibraries)
+                            {
+                                sGV.MCLibraryArguments += "\"" + library.Replace("%mcInstallDir%", Environment.CurrentDirectory) + "\";";
+                            }
+
                             // Start the game
                             gameReturn = StartGame(profile, sGV);
                         }
@@ -238,7 +244,7 @@ namespace MinecraftCL
 
                 if (downloadError == true)
                     // If there was a download error, forward it to the caller.
-                    return new LaunchGameReturn { returnType = LaunchReturnType.DownloadError, returnInfo = downloadReturn };
+                    return new LaunchGameReturn { returnType = LaunchReturnType.DownloadError, returnInfo = downloadReturn.ReturnValue };
                 else
                     // Otherwise return the LaunchGameReturn provided by StartGame();
                     return (LaunchGameReturn)gameReturn;

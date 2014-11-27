@@ -16,6 +16,12 @@ using System.Xml.Linq;
 
 namespace MinecraftLaunchLibrary
 {
+    public struct downloadGameReturn
+    {
+        public List<string> DownloadedLibraries;
+        public string ReturnValue;
+    }
+
     public struct downloadVariables
     {
         public string mcVersion;
@@ -319,7 +325,7 @@ namespace MinecraftLaunchLibrary
             return returnValue;
         }
 
-        public static string DownloadGame(downloadVariables downloaderInfo)
+        public static downloadGameReturn DownloadGame(downloadVariables downloaderInfo)
         {
             try
             {
@@ -367,7 +373,7 @@ namespace MinecraftLaunchLibrary
                     if (w.Status == WebExceptionStatus.ProtocolError && (int)((HttpWebResponse)w.Response).StatusCode == 403) // Note: Mojang download servers give 403 error when file is not found
                     {
                         // If the file wasn't found on the server, raise an error
-                        return "Download error. The information for Minecraft " + mcVersion + " could not be found on the server.";
+                        return new downloadGameReturn { ReturnValue = "Download error. The information for Minecraft " + mcVersion + " could not be found on the server." };
                     }
                     else
                     {
@@ -413,60 +419,6 @@ namespace MinecraftLaunchLibrary
                         downloadedLibraryLocations.Add("%mcInstallDir%" + libraryLocation);
                     }
                 }
-                /*
-                foreach (var item in mcDownloadLibraries)
-                {
-                    // Download the libraries and extract them if needed
-                    string currentDownloadType = "";
-                    string[] libraryDownloadURL = new string[2];
-                    string pathString = "";
-                    string libraryDownloadPath = "";
-                    string librarySavePath = "";
-
-                    libraryDownloadURL = item.Name.Split(':');
-                    libraryDownloadPath = "https://libraries.minecraft.net/" + libraryDownloadURL[0].Replace('.', '/') + "/" + libraryDownloadURL[1] + "/" + libraryDownloadURL[2] + "/" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2];
-                    librarySavePath = mcInstallDir + @"\.minecraft\libraries\" + libraryDownloadURL[0].Replace('.', '\\') + "\\" + libraryDownloadURL[1] + "\\" + libraryDownloadURL[2] + "\\" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2];
-                    libraryLocation = @"\.minecraft\libraries\" + libraryDownloadURL[0].Replace('.', '\\') + "\\" + libraryDownloadURL[1] + "\\" + libraryDownloadURL[2] + "\\" + libraryDownloadURL[1] + "-" + libraryDownloadURL[2];
-                    if (item.DownloadType != "")
-                    {
-                        currentDownloadType = "-" + item.DownloadType;
-                    }
-
-                    pathString = mcInstallDir + @"\.minecraft\libraries\" + libraryDownloadURL[0].Replace('.', '\\') + @"\" + libraryDownloadURL[1] + @"\" + libraryDownloadURL[2] + @"\";
-                    if (!System.IO.Directory.Exists(pathString))
-                    {
-                        System.IO.Directory.CreateDirectory(pathString);
-                    }
-
-                    // Download minecraft libary jar
-                    downloadFile(libraryDownloadPath + currentDownloadType + ".jar", librarySavePath + currentDownloadType + ".jar", validateFiles, "Downloading files for Minecraft " + mcVersion + "... " + libraryDownloadURL[1] + "-" + libraryDownloadURL[2] + currentDownloadType + ".jar", DDialog);
-
-                    // Extract the libary, if it is needed
-                    if (item.ExtractNative == true)
-                    {
-                        DDialog.downloadFileDisplay.Dispatcher.BeginInvoke(
-                            (Action)(() => { DDialog.downloadFileDisplay.Text = "Extracting native library for Minecraft " + mcVersion + "... " + libraryDownloadURL[1] + "-" + libraryDownloadURL[2] + currentDownloadType + ".jar"; }));
-
-                        if (!System.IO.Directory.Exists(mcInstallDir + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\"))
-                        {
-                            System.IO.Directory.CreateDirectory(mcInstallDir + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\");
-                        }
-                        using (ZipFile zip1 = ZipFile.Read(librarySavePath + currentDownloadType + ".jar"))
-                        {
-                            foreach (ZipEntry zipExtract in zip1)
-                            {
-                                if (zipExtract.FileName != "META-INF")
-                                    zipExtract.Extract(mcInstallDir + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\", ExtractExistingFileAction.OverwriteSilently);
-                            }
-                        }
-                        if (System.IO.Directory.Exists(mcInstallDir + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\META-INF\\"))
-                        {
-                            System.IO.Directory.Delete(mcInstallDir + "\\.minecraft\\versions\\" + mcVersion + "\\" + mcVersion + "-natives\\META-INF\\", true);
-                        }
-                    }*/
-
-
-
                 #endregion
 
                 if (!System.IO.Directory.Exists(mcInstallDir + @"\.minecraft\versions\" + mcVersion + @"\"))
@@ -512,7 +464,6 @@ namespace MinecraftLaunchLibrary
 
                 Dictionary<string, object> assetInformationDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(Convert.ToString(assetInformation));
                 string assetJSONString = assetInformationDictionary["objects"].ToString();
-                string[] unwantedAssetValues = new string[] { "[", "{", "}", "]", ",", "\"hash\":", "\r\n", " ", ":", "\"size\":" };
                 dynamic assetInfo = JsonConvert.DeserializeObject(assetJSONString);
 
                 foreach (var asset in assetInfo)
@@ -590,12 +541,12 @@ namespace MinecraftLaunchLibrary
                         Stage = DownloadUpdateStage.CompletedDownload
                     });
 
-                return "success"; // Return success in downloading
+                return new downloadGameReturn { DownloadedLibraries = downloadedLibraryLocations, ReturnValue = "success" }; // Return success in downloading
             }
             catch (WebException e)
             {
                 // An exception occured
-                return "An error occurred while downloading files. " + e.Message;
+                return new downloadGameReturn { ReturnValue = "An error occurred while downloading files. " + e.Message };
             }
             #endregion
         }
