@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Web.Helpers;
 using System.Web.Script.Serialization;
 using System.Xml;
 using System.Xml.Linq;
@@ -514,7 +513,7 @@ namespace MinecraftLaunchLibrary
                 Dictionary<string, object> assetInformationDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(Convert.ToString(assetInformation));
                 string assetJSONString = assetInformationDictionary["objects"].ToString();
                 string[] unwantedAssetValues = new string[] { "[", "{", "}", "]", ",", "\"hash\":", "\r\n", " ", ":", "\"size\":" };
-                var assetInfo = Json.Decode(assetJSONString);
+                dynamic assetInfo = JsonConvert.DeserializeObject(assetJSONString);
 
                 foreach (var asset in assetInfo)
                 {
@@ -690,7 +689,7 @@ namespace MinecraftLaunchLibrary
                 // Architecture may be "natives-windows",
                 // or maybe "natives-windows-{$arch}" if there is a
                 // specific architecture.
-                downloadType = libraryClass.natives.windows;
+                downloadType = "-" + libraryClass.natives.windows;
             }
 
             // See if it needs to be extracted

@@ -89,6 +89,7 @@ namespace MinecraftCL.FeedTheBeast
                     dynamic curseBalanceJSON = JsonConvert.DeserializeObject(curseCDNBalanceJSONString);
                     // INFO: There is also a "minimumLauncherVersion" json node in the ftblauncher code,
                     // but I don't think it is required.
+                    
                     if (curseBalanceJSON.repoSplitCurse != null)
                     {
                         // Not sure what the repoSplitCurse thing is on the servers, 
@@ -129,7 +130,7 @@ namespace MinecraftCL.FeedTheBeast
                 response = null;
                 status = null;
                 // Contact CreeperRepo for edges.json
-                HttpWebRequest creeperRepoRequest = WebRequest.Create(FTBLocations.CreeperRepo + "edges.json") as HttpWebRequest;
+                HttpWebRequest creeperRepoRequest = WebRequest.Create(FTBLocations.CreeperRepo + "/edges.json") as HttpWebRequest;
                 response = creeperRepoRequest.GetResponse() as HttpWebResponse;
                 status = response.StatusCode;
                 string creeperRepoList = null;
@@ -153,7 +154,7 @@ namespace MinecraftCL.FeedTheBeast
                 response = null;
                 status = null;
                 // Contact the curse server for edges.json
-                HttpWebRequest curseRequest = WebRequest.Create(FTBLocations.CurseCDN + "edges.json") as HttpWebRequest;
+                HttpWebRequest curseRequest = WebRequest.Create(FTBLocations.CurseCDN + "/edges.json") as HttpWebRequest;
                 response = curseRequest.GetResponse() as HttpWebResponse;
                 status = response.StatusCode;
                 string curseMirrorList = null;
