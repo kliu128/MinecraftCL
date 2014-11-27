@@ -174,8 +174,23 @@ namespace MinecraftCL
 
                 MinecraftUtils.DownloadUpdateEventHandler downloadUpdateDelegate = delegate(DownloadUpdateEventArgs x)
                     {
+                        worker.ReportProgress(0, x);
+                    };
+                MinecraftUtils.DownloadUpdateEvent += downloadUpdateDelegate;
+
+                bool downloadError = false;
+                worker.WorkerReportsProgress = true;
+                worker.DoWork += (o, x) =>
+                    {
+                        // Download the game
+                        downloadReturn = MinecraftUtils.DownloadGame(downloadVar);
+                    };
+                worker.ProgressChanged += (o, x) =>
+                    {
+                        DownloadUpdateEventArgs eventArgs = (DownloadUpdateEventArgs)x.UserState;
+
                         string downloadStringPrefix = null;
-                        switch (x.Stage)
+                        switch (eventArgs.Stage)
                         {
                             case DownloadUpdateStage.DownloadingGenericFile:
                                 downloadStringPrefix = "Downloading file ";
@@ -198,15 +213,7 @@ namespace MinecraftCL
                             default:
                                 throw new Exception();
                         }
-                        downloadDialog.downloadUpdateInfo = downloadStringPrefix + x.CurrentFile + " for Minecraft version " + x.MinecraftVersion;
-                    };
-                MinecraftUtils.DownloadUpdateEvent += downloadUpdateDelegate;
-
-                bool downloadError = false;
-                worker.DoWork += (o, x) =>
-                    {
-                        // Download the game
-                        downloadReturn = MinecraftUtils.DownloadGame(downloadVar);
+                        downloadDialog.downloadUpdateInfo = downloadStringPrefix + eventArgs.CurrentFile + " for Minecraft version " + eventArgs.MinecraftVersion;
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {

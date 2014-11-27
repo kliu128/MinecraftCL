@@ -70,7 +70,7 @@ namespace MinecraftLaunchLibrary
         CompletedDownload
     }
 
-    public struct DownloadUpdateEventArgs
+    public class DownloadUpdateEventArgs : EventArgs
     {
         public string CurrentFile { get; set; }
         public DownloadUpdateStage Stage { get; set; }
@@ -106,6 +106,7 @@ namespace MinecraftLaunchLibrary
 
         public delegate void DownloadUpdateEventHandler(DownloadUpdateEventArgs e);
         public static event DownloadUpdateEventHandler DownloadUpdateEvent;
+
         private static void TriggerDownloadUpdateEvent(DownloadUpdateEventArgs e)
         {
             DownloadUpdateEventHandler eventCopy = DownloadUpdateEvent;
@@ -330,16 +331,8 @@ namespace MinecraftLaunchLibrary
                 string minecraftArguments = "";
                 string mcVersion = downloaderInfo.mcVersion;
                 string mcInstallDir = downloaderInfo.mcInstallDir;
-                string mcVersionJSONString;
-
-                // Download versions.json to get version list
-                downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/versions.json", "versions.json", validateFiles, new DownloadUpdateEventArgs { CurrentFile = "versions.json", MinecraftVersion = mcVersion, Stage = DownloadUpdateStage.DownloadingGenericFile });
-                using (StreamReader streamReader = new StreamReader("versions.json", Encoding.UTF8))
-                {
-                    mcVersionJSONString = streamReader.ReadToEnd();
-                }
-
-                var mcVersionList = Json.Decode(mcVersionJSONString);
+                
+                dynamic mcVersionList = MinecraftServerUtils.GetVersionsJson();
 
                 // DOWNLOAD ALL MINECRAFT FILES
                 string executableFilePath = System.Windows.Application.ResourceAssembly.Location;
