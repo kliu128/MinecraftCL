@@ -260,7 +260,6 @@ namespace MinecraftCL
             int index = -1;
             foreach (profileSelection profileSelectBoxItem in ViewModel.profileCollection)
             {
-                //TODO: For some reason, profileSelectBox.Items.Count == 0. Had to use ViewModel.profileCollection in foreach instead.
                 index++;
                 if (profileSelectBoxItem.Name == savedLastUsedProfile)
                 {
