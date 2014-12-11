@@ -79,7 +79,7 @@ namespace MinecraftCLBootstrap
                     }
                     catch
                     {
-                        Console.WriteLine("Error downloading MinecraftCL.");
+                        Console.WriteLine("Error downloading MinecraftCL version.");
                         return false;
                     }
                 }

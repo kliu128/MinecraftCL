@@ -124,35 +124,6 @@ namespace MinecraftCL
                 File.Create(System.Environment.CurrentDirectory + @"\.mcl\ModpackSettings.xml");
             }
 
-            // Download MinecraftCLUpdater
-            HttpWebResponse updaterFileResponse = null;
-            try
-            {
-                HttpWebRequest updaterFile = (HttpWebRequest)WebRequest.Create("http://mcdonecreative.dynu.net/MinecraftCL/MinecraftCLUpdater.exe");
-                updaterFile.Method = "HEAD";
-                updaterFile.Timeout = 5000;
-                updaterFileResponse = (HttpWebResponse)updaterFile.GetResponse();
-            }
-            catch (Exception)
-            {
-                DebugConsole.Print("Could not check for an update to the updater.", "MainWindow", "WARN");
-            }
-            finally
-            {
-                if (updaterFileResponse != null && updaterFileResponse.StatusCode == HttpStatusCode.OK)
-                {
-                    DateTime localFileModifiedTime = File.GetLastWriteTime(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe");
-                    DateTime onlineFileModifiedTime = updaterFileResponse.LastModified;
-                    if (onlineFileModifiedTime > localFileModifiedTime)
-                    {
-                        using (WebClient wC = new WebClient())
-                        {
-                            wC.DownloadFile("http://mcdonecreative.dynu.net/MinecraftCL/MinecraftCLUpdater.exe", System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe");
-                        }
-                    }
-                }
-            }
-
             // Set up FTB download servers and grab modpack list asynchronously
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += (o, x) =>
@@ -162,54 +133,6 @@ namespace MinecraftCL
                     FTBLocations.PublicModpacks = FTBUtils.GetModpacks(out getModpackResult);
                 };
             worker.RunWorkerAsync();
-            #endregion
-
-            #region Update Check
-            if (File.Exists(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe"))
-            {
-                HttpStatusCode? status = null;
-                HttpWebResponse response = null;
-                try
-                {
-                    // Contact server for latest version
-                    HttpWebRequest request = WebRequest.Create("http://mcdonecreative.dynu.net/MinecraftCL/latest.txt") as HttpWebRequest;
-                    request.Timeout = 1000; // Set quick timeout; we want to start the program as fast as possible
-                    response = request.GetResponse() as HttpWebResponse;
-                    status = response.StatusCode;
-                }
-                catch (Exception e)
-                {
-                    if (e is WebException)
-                        DebugConsole.Print("Could not connect to the update server.", "MainWindow()", "WARN");
-                    else
-                        DebugConsole.Print("An error occurred during the update check. " + e, "MainWindow()", "ERROR");
-                }
-                finally
-                {
-                    if (status != null && status == HttpStatusCode.OK)
-                    {
-                        string latestLauncherVersion = "";
-                        // We have internet connection and the file is available, read it out
-                        using (System.IO.Stream tmpStream = response.GetResponseStream())
-                        {
-                            using (System.IO.TextReader tmpReader = new System.IO.StreamReader(tmpStream))
-                            {
-                                latestLauncherVersion = tmpReader.ReadToEnd();
-                            }
-                        }
-
-                        if (Version.Parse(latestLauncherVersion) > Version.Parse(Globals.MinecraftCLVersion))
-                        {
-                            // A new version is available
-                            ProcessStartInfo updaterStartInfo = new ProcessStartInfo();
-                            updaterStartInfo.FileName = System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLUpdater.exe";
-                            updaterStartInfo.Arguments = latestLauncherVersion;
-                            Process.Start(updaterStartInfo);    // Start updater with arguments
-                            this.Close();
-                        }
-                    }
-                }
-            }
             #endregion
 
             #region Load Settings (Username, Password, etc.)
