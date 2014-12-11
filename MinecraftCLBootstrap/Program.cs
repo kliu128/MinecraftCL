@@ -84,7 +84,7 @@ namespace MinecraftCLBootstrap
                     }
                 }
                 else
-                    // No update needed.
+                    // No update is needed.
                     return true;
             }
         }
