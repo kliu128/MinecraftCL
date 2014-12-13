@@ -40,6 +40,7 @@ namespace MinecraftCLBootstrap
             bool updateSuccess = checkForUpdate(minecraftCLVersion);
             if (updateSuccess == true || File.Exists("CL.exe"))
                 Process.Start("CL.exe");
+            Console.Read();
         }
 
         /// <summary>
