@@ -15,7 +15,7 @@ namespace MinecraftCL
             if (Globals.DebugOn)
             {
                 if (!Directory.Exists(Environment.CurrentDirectory + @"\.mcl\"))
-                    Directory.CreateDirectory(Environment.CurrentDirectory + @"\.mcl\")
+                    Directory.CreateDirectory(Environment.CurrentDirectory + @"\.mcl\");
 
                 if (!File.Exists(System.Environment.CurrentDirectory + @"\.mcl\Console.log"))
                     File.Create(System.Environment.CurrentDirectory + @"\.mcl\Console.log");
