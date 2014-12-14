@@ -37,7 +37,7 @@ namespace MinecraftCLBootstrap
                 Console.WriteLine("MinecraftCL Version = Not Installed");
             }
             // Check for updates to MinecraftCL.
-            bool updateSuccess = checkForUpdate(minecraftCLVersion);
+            bool updateSuccess = CheckForUpdate(minecraftCLVersion);
             if (updateSuccess == true || File.Exists("CL.exe"))
                 Process.Start("CL.exe");
             Console.Read();
@@ -48,7 +48,7 @@ namespace MinecraftCLBootstrap
         /// </summary>
         /// <param name="minecraftCLVersion"></param>
         /// <returns>Returns false if update failed. Does NOT return false if there was no update required.</returns>
-        private static bool checkForUpdate(string minecraftCLVersion)
+        private static bool CheckForUpdate(string minecraftCLVersion)
         {
             Version latestVersion = null;
             using (WebClient client = new WebClient())
@@ -65,28 +65,53 @@ namespace MinecraftCLBootstrap
                     Console.WriteLine("Could not check for update.");
                     return false;
                 }
+            }
 
-                // If MinecraftCL is not downloaded (null), or the latest version is higher than the installed version,
-                // download MinecraftCL from server.
-                if ((minecraftCLVersion == null) || 
-                    (minecraftCLVersion != null && latestVersion > Version.Parse(minecraftCLVersion)))
+            // If MinecraftCL is not downloaded (null), or the latest version is higher than the installed version,
+            // download MinecraftCL from server.
+            if ((minecraftCLVersion == null) || 
+                (minecraftCLVersion != null && latestVersion > Version.Parse(minecraftCLVersion)))
+            {
+                Console.WriteLine("Downloading MinecraftCL version " + latestVersion + "...");
+                try
                 {
-                    try
-                    {
-                        // Download MinecraftCL
-                        client.DownloadFile(ConfigurationManager.AppSettings["CLDownloadURL"], "CL.exe");
-                        Console.WriteLine("MinecraftCL successfully updated to " + latestVersion + ".");
-                        return true;
-                    }
-                    catch
-                    {
-                        Console.WriteLine("Error downloading MinecraftCL version.");
-                        return false;
-                    }
-                }
-                else
-                    // No update is needed.
+                    // Download MinecraftCL
+                    bool success = DownloadUpdate(latestVersion);
+                    Console.WriteLine("MinecraftCL successfully updated to " + latestVersion + ".");
                     return true;
+                }
+                catch
+                {
+                    Console.WriteLine("Error downloading MinecraftCL version.");
+                    return false;
+                }
+            }
+            else
+                // No update is needed.
+                return true;
+            
+        }
+        /// <summary>
+        /// Downloads an update to MinecraftCL.
+        /// </summary>
+        /// <param name="version">Version to be downloaded from MinecraftCL servers.</param>
+        /// <returns>bool: success of download or failure</returns>
+        private static bool DownloadUpdate(Version version)
+        {
+            try
+            {
+                string clVersionInfoURL = ConfigurationManager.AppSettings["CLVersionInformationURL"].Replace("${version}", version.ToString());
+                
+                using (WebClient client = new WebClient())
+                {
+                    string versionInfo = client.DownloadString(clVersionInfoURL);
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

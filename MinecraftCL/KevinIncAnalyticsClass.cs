@@ -120,7 +120,6 @@ namespace MinecraftCL
                 catch(Exception e)
                 {
                     DebugConsole.Print("Could not send analytic data. Exception: " + e, "Analytics.UploadToServer()", "ERROR");
-                    return;
                 }
             }
         }
