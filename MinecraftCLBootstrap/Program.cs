@@ -7,6 +7,8 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace MinecraftCLBootstrap
 {
@@ -37,10 +39,10 @@ namespace MinecraftCLBootstrap
                 Console.WriteLine("MinecraftCL Version = Not Installed");
             }
             // Check for updates to MinecraftCL.
-            bool updateSuccess = CheckForUpdate(minecraftCLVersion);
-            if (updateSuccess == true || File.Exists("CL.exe"))
+            bool successfulCheck = CheckForUpdate(minecraftCLVersion);
+            Console.WriteLine("Starting MinecraftCL...");
+            if (successfulCheck == true || File.Exists("CL.exe"))
                 Process.Start("CL.exe");
-            Console.Read();
         }
 
         /// <summary>
@@ -72,19 +74,13 @@ namespace MinecraftCLBootstrap
             if ((minecraftCLVersion == null) || 
                 (minecraftCLVersion != null && latestVersion > Version.Parse(minecraftCLVersion)))
             {
-                Console.WriteLine("Downloading MinecraftCL version " + latestVersion + "...");
-                try
-                {
+
                     // Download MinecraftCL
                     bool success = DownloadUpdate(latestVersion);
-                    Console.WriteLine("MinecraftCL successfully updated to " + latestVersion + ".");
-                    return true;
-                }
-                catch
-                {
-                    Console.WriteLine("Error downloading MinecraftCL version.");
-                    return false;
-                }
+                    if (success)
+                        return true;
+                    else
+                        return false;
             }
             else
                 // No update is needed.
@@ -98,15 +94,34 @@ namespace MinecraftCLBootstrap
         /// <returns>bool: success of download or failure</returns>
         private static bool DownloadUpdate(Version version)
         {
+            Console.WriteLine();
+            Console.WriteLine("**** Downloading MinecraftCL version " + version + " ****");
+
             try
             {
-                string clVersionInfoURL = ConfigurationManager.AppSettings["CLVersionInformationURL"].Replace("${version}", version.ToString());
+                string clVersionInfoURL = ConfigurationManager.AppSettings["VersionInformationURL"].Replace("${version}", version.ToString());
+                string versionFolderURL = ConfigurationManager.AppSettings["VersionFolderURL"].Replace("${version}", version.ToString());
                 
                 using (WebClient client = new WebClient())
                 {
-                    string versionInfo = client.DownloadString(clVersionInfoURL);
+                    XElement versionInfo = XElement.Parse(client.DownloadString(clVersionInfoURL));
+
+                    string[] updateFiles = versionInfo.Element("Files")
+                        .Value
+                        .Split(new string[] {","}, StringSplitOptions.RemoveEmptyEntries);
+
+                    Console.WriteLine("Files to download: " + versionInfo.Element("Files").Value);
+
+                    foreach (string file in updateFiles)
+                    {
+                        // Download each file sequentially that is included in the update.
+                        Console.WriteLine("Downloading file " + file + " for MinecraftCL " + version + ".");
+                        Directory.CreateDirectory(Path.GetDirectoryName(Environment.CurrentDirectory + @"\" + file));
+                        client.DownloadFile(versionFolderURL + file, Environment.CurrentDirectory + @"\" + file);
+                    }
                 }
 
+                Console.WriteLine("**** Completed download of MinecraftCL version " + version + " ****");
                 return true;
             }
             catch
