@@ -17,7 +17,7 @@ namespace MinecraftCLBootstrap
         static void Main(string[] args)
         {
             // Print information about environment and bootstrap version.
-            Console.Title = "Minecraft CL Bootstrap";
+            Console.Title = "Minecraft CL Bootstrapper";
             Console.WriteLine("MinecraftCL Bootstrap v" + Application.ProductVersion);
             Console.WriteLine("Current time is " + DateTime.UtcNow + " UTC");
             Console.WriteLine();
@@ -38,11 +38,25 @@ namespace MinecraftCLBootstrap
                 // MinecraftCL is not downloaded.
                 Console.WriteLine("MinecraftCL Version = Not Installed");
             }
+
             // Check for updates to MinecraftCL.
-            bool successfulCheck = CheckForUpdate(minecraftCLVersion);
-            Console.WriteLine("Starting MinecraftCL...");
-            if (successfulCheck == true || File.Exists("CL.exe"))
+            Console.WriteLine("Checking for MinecraftCL update...");
+            Version newVersion;
+            bool updateRequired = CheckForUpdate(minecraftCLVersion, out newVersion);
+            if (updateRequired && newVersion != null)
+                DownloadUpdate(newVersion);
+
+
+            if (File.Exists("CL.exe"))
+            {
+                Console.WriteLine("Starting MinecraftCL...");
                 Process.Start("CL.exe");
+            }
+            else
+            {
+                Console.WriteLine("ERROR: MinecraftCL not found. Press any key to exit.");
+                Console.ReadKey();
+            }
         }
 
         /// <summary>
@@ -50,9 +64,8 @@ namespace MinecraftCLBootstrap
         /// </summary>
         /// <param name="minecraftCLVersion"></param>
         /// <returns>Returns false if update failed. Does NOT return false if there was no update required.</returns>
-        private static bool CheckForUpdate(string minecraftCLVersion)
+        private static bool CheckForUpdate(string minecraftCLVersion, out Version latestVersion)
         {
-            Version latestVersion = null;
             using (WebClient client = new WebClient())
             {
                 try
@@ -64,27 +77,22 @@ namespace MinecraftCLBootstrap
                 catch
                 {
                     // Could not reach server; is it down?
-                    Console.WriteLine("Could not check for update.");
+                    Console.WriteLine("ERROR: Could not check for update.");
+                    latestVersion = null;
                     return false;
                 }
             }
 
             // If MinecraftCL is not downloaded (null), or the latest version is higher than the installed version,
-            // download MinecraftCL from server.
+            // return true.
             if ((minecraftCLVersion == null) || 
                 (minecraftCLVersion != null && latestVersion > Version.Parse(minecraftCLVersion)))
             {
-
-                    // Download MinecraftCL
-                    bool success = DownloadUpdate(latestVersion);
-                    if (success)
-                        return true;
-                    else
-                        return false;
+                return true;
             }
             else
                 // No update is needed.
-                return true;
+                return false;
             
         }
         /// <summary>
