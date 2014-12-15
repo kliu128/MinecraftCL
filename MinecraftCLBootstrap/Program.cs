@@ -23,7 +23,7 @@ namespace MinecraftCLBootstrap
             Console.WriteLine();
             Console.WriteLine("MinecraftCL will be starting soon.");
             Console.WriteLine();
-            Console.WriteLine(".NET Version       = " + System.Environment.Version);
+            Console.WriteLine(".NET Version = " + System.Environment.Version);
 
             // Load MinecraftCL version information from the file.
             string minecraftCLVersion = null;
