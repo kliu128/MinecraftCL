@@ -85,15 +85,17 @@ namespace MinecraftCLBootstrap
 
             // If MinecraftCL is not downloaded (null), or the latest version is higher than the installed version,
             // return true.
-            if ((minecraftCLVersion == null) || 
+            if ((minecraftCLVersion == null) ||
                 (minecraftCLVersion != null && latestVersion > Version.Parse(minecraftCLVersion)))
             {
                 return true;
             }
             else
+            {
                 // No update is needed.
+                Console.WriteLine("No update required.");
                 return false;
-            
+            }
         }
         /// <summary>
         /// Downloads an update to MinecraftCL.
