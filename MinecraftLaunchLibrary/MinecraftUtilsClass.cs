@@ -20,6 +20,7 @@ namespace MinecraftLaunchLibrary
     {
         public List<string> DownloadedLibraries;
         public string ReturnValue;
+        public DateTime DownloadTime;
     }
 
     public struct downloadVariables
@@ -84,15 +85,19 @@ namespace MinecraftLaunchLibrary
 
     public static class MinecraftUtils
     {
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern bool SetWindowText(IntPtr hwnd, String lpString);
+        public struct MinecraftAsset
+        {
+            [JsonProperty("Name")]
+            public string FileName { get; set; }
 
-        [DllImport("user32.dll")]
-        private static extern int SendMessage(IntPtr hwnd, int message, int wParam, IntPtr lParam);
+            [JsonProperty(PropertyName = "hash")]
+            public string Hash { get; set; }
 
-        private const int WM_SETICON = 0x80;
-        private const int ICON_SMALL = 0;
-        private const int ICON_BIG = 1;
+            public string Directory { get { return Hash.Substring(0, 2); } }
+
+            [JsonProperty(PropertyName = "size")]
+            public string Size { get; set; }
+        }
 
         private class WebClientNoKeepAlive : WebClient
         {
@@ -464,26 +469,27 @@ namespace MinecraftLaunchLibrary
 
                 Dictionary<string, object> assetInformationDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(Convert.ToString(assetInformation));
                 string assetJSONString = assetInformationDictionary["objects"].ToString();
-                dynamic assetInfo = JsonConvert.DeserializeObject(assetJSONString);
+                List<MinecraftAsset> assetList = JsonConvert.DeserializeObject<List<MinecraftAsset>>(assetJSONString);
 
-                foreach (var asset in assetInfo)
+                foreach (MinecraftAsset asset in assetList)
                 {
-                    string assetDirectory = asset.Value.hash.Substring(0, 2);
+                    Int64 assetSize = Convert.ToInt64((string)asset.Value.size);
+
                     Directory.CreateDirectory(mcInstallDir + @"\.minecraft\assets\objects\" + assetDirectory); // Create asset directory, eg. \.minecraft\assets\objects\eb\
-                    int downloadFileReturn = downloadFile("http://resources.download.minecraft.net/" + asset.Value.hash.Substring(0, 2) + "/" + asset.Value.hash,
-                        mcInstallDir + @"\.minecraft\assets\objects\" + asset.Value.hash.Substring(0, 2) + @"\" + asset.Value.hash,
+                    int downloadFileReturn = downloadFile("http://resources.download.minecraft.net/" + assetDirectory + "/" + assetHash,
+                        mcInstallDir + @"\.minecraft\assets\objects\" + assetDirectory + @"\" + assetHash,
                         validateFiles,
                         new DownloadUpdateEventArgs
                         {
-                            CurrentFile = asset.Value.hash,
+                            CurrentFile = assetHash,
                             MinecraftVersion = mcVersion,
                             Stage = DownloadUpdateStage.DownloadingAsset
                         },
-                        Convert.ToInt64(asset.Value.size));
+                        assetSize);
                     if (mcAssetsVersion == "legacy" && downloadFileReturn == 0) // If legacy assets must be copied, and the file was downloaded/updated, then recopy the legacy file
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + asset.Key));
-                        System.IO.File.Copy(mcInstallDir + @"\.minecraft\assets\objects\" + asset.Value.hash.Substring(0, 2) + @"\" + asset.Value.hash, mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + asset.Key.Replace('/', '\\'), true);
+                        Directory.CreateDirectory(Path.GetDirectoryName(mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + assetName));
+                        System.IO.File.Copy(mcInstallDir + @"\.minecraft\assets\objects\" + assetDirectory + @"\" + assetHash, mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + assetName.Replace('/', '\\'), true);
                     }
                 }
 
@@ -543,7 +549,7 @@ namespace MinecraftLaunchLibrary
 
                 return new downloadGameReturn { DownloadedLibraries = downloadedLibraryLocations, ReturnValue = "success" }; // Return success in downloading
             }
-            catch (WebException e)
+            catch (Exception e)
             {
                 // An exception occured
                 return new downloadGameReturn { ReturnValue = "An error occurred while downloading files. " + e.Message };
@@ -815,13 +821,6 @@ namespace MinecraftLaunchLibrary
         public List<Rule> rules { get; set; }
         public Natives natives { get; set; }
         public Extract extract { get; set; }
-    }
-
-    public class Asset
-    {
-        public string name { get; set; }
-        public string hash { get; set; }
-        public string size { get; set; }
     }
 
     #endregion
