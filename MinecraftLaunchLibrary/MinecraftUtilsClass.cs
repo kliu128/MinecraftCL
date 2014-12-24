@@ -19,8 +19,17 @@ namespace MinecraftLaunchLibrary
     public struct downloadGameReturn
     {
         public List<string> DownloadedLibraries;
+        public List<Asset> DownloadedAssets;
         public string ReturnValue;
         public DateTime DownloadTime;
+    }
+
+    public struct Asset
+    {
+        public string FileName { get; set; }
+        public string Hash { get; set; }
+        public string Directory { get { return Hash.Substring(0, 2); } }
+        public Int64 Size { get; set; }
     }
 
     public struct downloadVariables
@@ -85,20 +94,6 @@ namespace MinecraftLaunchLibrary
 
     public static class MinecraftUtils
     {
-        public struct MinecraftAsset
-        {
-            [JsonProperty("Name")]
-            public string FileName { get; set; }
-
-            [JsonProperty(PropertyName = "hash")]
-            public string Hash { get; set; }
-
-            public string Directory { get { return Hash.Substring(0, 2); } }
-
-            [JsonProperty(PropertyName = "size")]
-            public string Size { get; set; }
-        }
-
         private class WebClientNoKeepAlive : WebClient
         {
             // Standard WebClient, just with keep-alive set to false
@@ -461,35 +456,39 @@ namespace MinecraftLaunchLibrary
                         Stage = DownloadUpdateStage.DownloadingGenericFile
                     });
 
-                string assetInformation;
+                string assetInformationString;
                 using (StreamReader streamReader = new StreamReader(mcInstallDir + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json", Encoding.UTF8))
                 {
-                    assetInformation = streamReader.ReadToEnd();
+                    assetInformationString = streamReader.ReadToEnd();
                 }
 
-                Dictionary<string, object> assetInformationDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(Convert.ToString(assetInformation));
-                string assetJSONString = assetInformationDictionary["objects"].ToString();
-                List<MinecraftAsset> assetList = JsonConvert.DeserializeObject<List<MinecraftAsset>>(assetJSONString);
+                dynamic assetInformation = JsonConvert.DeserializeObject<dynamic>(assetInformationString);
 
-                foreach (MinecraftAsset asset in assetList)
+                foreach (dynamic dynamicAsset in assetInformation.objects)
                 {
-                    Int64 assetSize = Convert.ToInt64((string)asset.Value.size);
+                    Asset asset = new Asset
+                    { 
+                        FileName = dynamicAsset.Name, 
+                        Hash = dynamicAsset.Value.hash, 
+                        Size = Convert.ToInt64((string)dynamicAsset.Value.size) 
+                    };
 
-                    Directory.CreateDirectory(mcInstallDir + @"\.minecraft\assets\objects\" + assetDirectory); // Create asset directory, eg. \.minecraft\assets\objects\eb\
-                    int downloadFileReturn = downloadFile("http://resources.download.minecraft.net/" + assetDirectory + "/" + assetHash,
-                        mcInstallDir + @"\.minecraft\assets\objects\" + assetDirectory + @"\" + assetHash,
+                    // Create asset directory, eg. \.minecraft\assets\objects\eb\
+                    Directory.CreateDirectory(mcInstallDir + @"\.minecraft\assets\objects\" + asset.Directory);
+                    int downloadFileReturn = downloadFile("http://resources.download.minecraft.net/" + asset.Directory + "/" + asset.Hash,
+                        mcInstallDir + @"\.minecraft\assets\objects\" + asset.Directory + @"\" + asset.Hash,
                         validateFiles,
                         new DownloadUpdateEventArgs
                         {
-                            CurrentFile = assetHash,
+                            CurrentFile = asset.Hash,
                             MinecraftVersion = mcVersion,
                             Stage = DownloadUpdateStage.DownloadingAsset
                         },
-                        assetSize);
+                        asset.Size);
                     if (mcAssetsVersion == "legacy" && downloadFileReturn == 0) // If legacy assets must be copied, and the file was downloaded/updated, then recopy the legacy file
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + assetName));
-                        System.IO.File.Copy(mcInstallDir + @"\.minecraft\assets\objects\" + assetDirectory + @"\" + assetHash, mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + assetName.Replace('/', '\\'), true);
+                        Directory.CreateDirectory(Path.GetDirectoryName(mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + asset.FileName));
+                        System.IO.File.Copy(mcInstallDir + @"\.minecraft\assets\objects\" + asset.Directory + @"\" + asset.Hash, mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + asset.FileName.Replace('/', '\\'), true);
                     }
                 }
 
@@ -555,6 +554,20 @@ namespace MinecraftLaunchLibrary
                 return new downloadGameReturn { ReturnValue = "An error occurred while downloading files. " + e.Message };
             }
             #endregion
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="asset">The asset to download.</param>
+        /// <param name="downloadLocation">Where to save the asset.</param>
+        /// <param name="validateFiles"></param>
+        /// <param name="mcVersion"></param>
+        /// <param name="libraryLocation"></param>
+        /// <returns>Whether or not the asset was downloaded/updated.</returns>
+        private static bool DownloadAsset(Asset asset, string downloadLocation, bool validateFiles, string mcVersion, out string libraryLocation)
+        {
+            
         }
 
         /// <summary>
