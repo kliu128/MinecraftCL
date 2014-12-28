@@ -117,6 +117,9 @@
     </Compile>
     <Compile Include="DebugConsoleClass.cs" />
     <Compile Include="DirectoryCopy.cs" />
+    <Compile Include="DownloadDialog.xaml.cs">
+      <DependentUpon>DownloadDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
     </Compile>
@@ -144,6 +147,10 @@
     <Page Include="AddModpackWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DownloadDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="ErrorWindow.xaml">
       <SubType>Designer</SubType>

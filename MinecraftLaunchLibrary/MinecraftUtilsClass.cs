@@ -267,13 +267,22 @@ namespace MinecraftLaunchLibrary
             return new startGameReturn { MinecraftProcess = mcProc, StartInfo = startInfo, ReturnCode = startMinecraftReturnCode.StartedMinecraft, ErrorInfo = "", LaunchParameters = startInfo.Arguments };
         }
 
-        private static int downloadFile(string downloadLocation, string saveLocation, bool validateFiles, DownloadUpdateEventArgs downloadEventArgs, long specifiedFileSize = new long())
+        /// <summary>
+        /// Downloads a file and triggers an event. Supports multiple ways of validation.
+        /// </summary>
+        /// <param name="downloadLocation"></param>
+        /// <param name="saveLocation"></param>
+        /// <param name="validateFiles"></param>
+        /// <param name="downloadEventArgs"></param>
+        /// <param name="specifiedFileSize"></param>
+        /// <returns>Whether or not the file was downloaded/updated.</returns>
+        private static bool downloadFile(string downloadLocation, string saveLocation, bool validateFiles, DownloadUpdateEventArgs downloadEventArgs, long specifiedFileSize = new long())
         {
             // return code 0 = downloaded file
             // return code 1 = skipped file
             WebClientNoKeepAlive webClient = new WebClientNoKeepAlive();
             FileInfo savedFile = new FileInfo(saveLocation);
-            int returnValue = 0;
+            bool returnValue = true;
 
             // Notify the user that we are downloading
             TriggerDownloadUpdateEvent(downloadEventArgs);
@@ -287,18 +296,18 @@ namespace MinecraftLaunchLibrary
                     {
                         // If the file sizes don't match, redownload the file
                         webClient.DownloadFile(downloadLocation, saveLocation);
-                        returnValue = 0;
+                        returnValue = true;
                     }
                     else
                     {
-                        returnValue = 1;
+                        returnValue = false;
                     }
                 }
                 else
                 {
                     // If there is no specified file size, simply revalidate the file by redownloading it
                     webClient.DownloadFile(downloadLocation, saveLocation);
-                    returnValue = 0;
+                    returnValue = true;
                 }
             }
             else
@@ -314,12 +323,12 @@ namespace MinecraftLaunchLibrary
                 if (HEADresponse.LastModified > savedFile.LastWriteTime)
                 {
                     webClient.DownloadFile(downloadLocation, saveLocation);
-                    returnValue = 0;
+                    returnValue = true;
                 }
 
                 // Close connection to server, prevents timeouts because of a concurrent thread limit
                 HEADresponse.Close();
-                returnValue = 1;
+                returnValue = false;
             }
 
             return returnValue;
@@ -473,27 +482,11 @@ namespace MinecraftLaunchLibrary
                         Size = Convert.ToInt64((string)dynamicAsset.Value.size) 
                     };
 
-                    // Create asset directory, eg. \.minecraft\assets\objects\eb\
-                    Directory.CreateDirectory(mcInstallDir + @"\.minecraft\assets\objects\" + asset.Directory);
-                    int downloadFileReturn = downloadFile("http://resources.download.minecraft.net/" + asset.Directory + "/" + asset.Hash,
-                        mcInstallDir + @"\.minecraft\assets\objects\" + asset.Directory + @"\" + asset.Hash,
-                        validateFiles,
-                        new DownloadUpdateEventArgs
-                        {
-                            CurrentFile = asset.Hash,
-                            MinecraftVersion = mcVersion,
-                            Stage = DownloadUpdateStage.DownloadingAsset
-                        },
-                        asset.Size);
-                    if (mcAssetsVersion == "legacy" && downloadFileReturn == 0) // If legacy assets must be copied, and the file was downloaded/updated, then recopy the legacy file
-                    {
-                        Directory.CreateDirectory(Path.GetDirectoryName(mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + asset.FileName));
-                        System.IO.File.Copy(mcInstallDir + @"\.minecraft\assets\objects\" + asset.Directory + @"\" + asset.Hash, mcInstallDir + @"\.minecraft\assets\virtual\legacy\" + asset.FileName.Replace('/', '\\'), true);
-                    }
+                    DownloadAsset(asset, mcInstallDir, validateFiles, mcVersion, mcAssetsVersion);
                 }
 
                 #endregion
-
+                
                 #region Save version information to XML
 
                 string[] minecraftArgumentsArray = downloadedLibraryLocations.ToArray<string>();
@@ -553,7 +546,7 @@ namespace MinecraftLaunchLibrary
                 // An exception occured
                 return new downloadGameReturn { ReturnValue = "An error occurred while downloading files. " + e.Message };
             }
-            #endregion
+            #endregion*/
         }
 
         /// <summary>
@@ -565,9 +558,31 @@ namespace MinecraftLaunchLibrary
         /// <param name="mcVersion"></param>
         /// <param name="libraryLocation"></param>
         /// <returns>Whether or not the asset was downloaded/updated.</returns>
-        private static bool DownloadAsset(Asset asset, string downloadLocation, bool validateFiles, string mcVersion, out string libraryLocation)
+        private static bool DownloadAsset(Asset asset, string downloadLocation, bool validateFiles, string mcVersion, string assetsVersion)
         {
-            
+            // Create directory for the asset (eg. /ac/ac1e...)
+            Directory.CreateDirectory(downloadLocation + @"\.minecraft\assets\objects\" + asset.Directory);
+
+            // Download the asset.
+            bool downloadFileReturn = downloadFile("http://resources.download.minecraft.net/" + asset.Directory + "/" + asset.Hash,
+                downloadLocation + @"\.minecraft\assets\objects\" + asset.Directory + @"\" + asset.Hash,
+                validateFiles,
+                new DownloadUpdateEventArgs
+                {
+                    CurrentFile = asset.Hash,
+                    MinecraftVersion = mcVersion,
+                    Stage = DownloadUpdateStage.DownloadingAsset
+                },
+                asset.Size);
+
+            // If Minecraft is asset version = legacy, copy the asset to the legacy location.
+            if (assetsVersion == "legacy" && downloadFileReturn == true)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(downloadLocation + @"\.minecraft\assets\virtual\legacy\" + asset.FileName));
+                System.IO.File.Copy(downloadLocation + @"\.minecraft\assets\objects\" + asset.Directory + @"\" + asset.Hash, downloadLocation + @"\.minecraft\assets\virtual\legacy\" + asset.FileName.Replace('/', '\\'), true);
+            }
+
+            return downloadFileReturn;
         }
 
         /// <summary>
@@ -750,48 +765,6 @@ namespace MinecraftLaunchLibrary
 
             return addDownload;
         }
-
-        #region JSON Classes
-        private class Os
-        {
-            public string name { get; set; }
-            public string version { get; set; }
-        }
-
-        private class Rule
-        {
-            public string action { get; set; }
-            public Os os { get; set; }
-        }
-
-        private class Natives
-        {
-            public string linux { get; set; }
-            public string windows { get; set; }
-            public string osx { get; set; }
-        }
-
-        private class Extract
-        {
-            public List<string> exclude { get; set; }
-        }
-
-        private class Library
-        {
-            public string name { get; set; }
-            public List<Rule> rules { get; set; }
-            public Natives natives { get; set; }
-            public Extract extract { get; set; }
-        }
-
-        private class Asset
-        {
-            public string name { get; set; }
-            public string hash { get; set; }
-            public string size { get; set; }
-        }
-
-        #endregion
     }
 
     #region Information to Download Library Class
