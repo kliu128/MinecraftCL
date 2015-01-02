@@ -133,7 +133,7 @@ namespace MinecraftCL
                 startingArguments = startingArguments.Replace("${user_properties}", "{}"); // Yeah, no twitch here...
                 startingArguments = startingArguments.Replace("${user_type}", sGV.userType);
                 startingArguments = startingArguments.Replace("${auth_session}", sGV.AccessToken);
-                sGV.StartingArguments = startingArguments;
+                sGV.LaunchArguments = startingArguments;
             }
 
             errorInformation = "";
@@ -163,8 +163,6 @@ namespace MinecraftCL
                 return new LaunchGameReturn { returnInfo = authenticationReturnString, returnType = LaunchReturnType.AuthenticationError };
             }
             
-            // Get version information for the VANILLA version of minecraft, whether we're launching a modpack or not
-            string versionInformationError;
             bool mcVersionExists = checkMinecraftExists(sGV.Version);
 
             if (!mcVersionExists)
@@ -255,11 +253,6 @@ namespace MinecraftCL
             else
             {
                 // The version already exists, launch game
-
-                getVersionInformation(ref sGV, out versionInformationError);
-                if (versionInformationError != "")
-                    return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
-
                 #region Backup Minecraft worlds if specified
                 if (sGV.AutoBackupWorld == true && Directory.Exists(sGV.InstallDir + @"\.minecraft\saves\"))
                 {
@@ -326,6 +319,11 @@ namespace MinecraftCL
 
             xDoc.Save(System.Environment.CurrentDirectory + "//.mcl//MinecraftCLSettings.xml");
             #endregion
+
+            string versionInformationError;
+            getVersionInformation(ref sGV, out versionInformationError);
+            if (versionInformationError != "")
+                return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
 
             startGameReturn startReturn = MinecraftUtils.Start(sGV);
 

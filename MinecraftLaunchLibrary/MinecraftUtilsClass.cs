@@ -18,11 +18,21 @@ namespace MinecraftLaunchLibrary
 {
     public struct downloadGameReturn
     {
-        public List<string> DownloadedLibraryLocations;
-        public string AssetIndex;
-        public string MainClass;
-        public string ReturnValue;
-        public DateTime DownloadTime;
+        public List<string> DownloadedLibraryLocations { get; set; }
+        public string AssetIndex { get; set; }
+        public string MainClass { get; set; }
+        public string ReturnValue { get; set; }
+        
+        /// <summary>
+        /// The time that Minecraft was downloaded.
+        /// </summary>
+        public DateTime DownloadTime { get; set; }
+
+        /// <summary>
+        /// Includes information on how to launch the game, eg.
+        /// --username ${auth_player_name}, etc.
+        /// </summary>
+        public string LaunchArguments { get; set; }
     }
 
     public struct Asset
@@ -46,7 +56,7 @@ namespace MinecraftLaunchLibrary
         public string InstallDir { get; set; }
         public string MCLibraryArguments { get; set; }
         public string MainClass { get; set; }
-        public string StartingArguments { get; set; }
+        public string LaunchArguments { get; set; }
         public string JavaArguments { get; set; }
 
         public string LastUsedProfile { get; set; }
@@ -259,7 +269,7 @@ namespace MinecraftLaunchLibrary
             + sGV.InstallDir + @"\.minecraft\versions\"
             + sGV.Version + @"\" + sGV.Version + "-natives\" -cp "
             + sGV.MCLibraryArguments + ";\""
-            + sGV.InstallDir + @"\.minecraft\versions\" + sGV.Version + @"\" + sGV.Version + ".jar\" " + sGV.MainClass + " " + sGV.StartingArguments;
+            + sGV.InstallDir + @"\.minecraft\versions\" + sGV.Version + @"\" + sGV.Version + ".jar\" " + sGV.MainClass + " " + sGV.LaunchArguments;
             startInfo.Arguments = pArguments.Replace("%mcInstallDir%", sGV.InstallDir);
             startInfo.WorkingDirectory = sGV.InstallDir;
 
@@ -342,7 +352,7 @@ namespace MinecraftLaunchLibrary
                 string mcAssetsVersion = "";
                 bool validateFiles = downloaderInfo.ValidateFiles;
                 string mcMainClass = "";
-                string startingArguments = "";
+                string launchArguments = "";
                 string minecraftArguments = "";
                 string mcVersion = downloaderInfo.mcVersion;
                 string mcInstallDir = downloaderInfo.mcInstallDir;
@@ -398,7 +408,7 @@ namespace MinecraftLaunchLibrary
 
                 Dictionary<string, object> versionInformationDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(Convert.ToString(versionInformation));
                 mcMainClass = versionInformationDictionary["mainClass"].ToString();
-                startingArguments = versionInformationDictionary["minecraftArguments"].ToString();
+                launchArguments = versionInformationDictionary["minecraftArguments"].ToString();
                 if (versionInformationDictionary.ContainsKey("assets"))
                 {
                     mcAssetsVersion = versionInformationDictionary["assets"].ToString();
@@ -495,7 +505,8 @@ namespace MinecraftLaunchLibrary
                     DownloadedLibraryLocations = downloadedLibraryLocations,
                     DownloadTime = DateTime.Now,
                     MainClass = mcMainClass,
-                    ReturnValue = "success"
+                    ReturnValue = "success",
+                    LaunchArguments = launchArguments
                 };
 
                 #region Save version information to XML
@@ -520,7 +531,7 @@ namespace MinecraftLaunchLibrary
                             versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/mcAssetsVersion").InnerText = mcAssetsVersion;
                             versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/minecraftLibraryList").InnerText = minecraftArguments;
                             versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/mainClass").InnerText = mcMainClass;
-                            versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/startingArguments").InnerText = startingArguments;
+                            versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/startingArguments").InnerText = launchArguments;
                             versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/savedReleaseTime").InnerText = DateTime.Now.ToString();
                             versionInformationXML.Save(mcInstallDir + "\\.mcl\\VersionInformation.xml");
                         }
@@ -536,7 +547,7 @@ namespace MinecraftLaunchLibrary
                         new XElement("mcAssetsVersion", mcAssetsVersion),
                         new XElement("minecraftLibraryList", minecraftArguments),
                         new XElement("mainClass", mcMainClass),
-                        new XElement("startingArguments", startingArguments),
+                        new XElement("startingArguments", launchArguments),
                         new XElement("savedReleaseTime", DateTime.Now.ToString()));
                     doc.Root.Add(mcXMLValues);
                     doc.Save(mcInstallDir + "\\.mcl\\VersionInformation.xml");
