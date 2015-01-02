@@ -331,6 +331,7 @@ namespace MinecraftCL
             string javaOutput = mcProcess.StandardOutput.ReadToEnd();
             string javaError = mcProcess.StandardError.ReadToEnd();
             int exitCode = mcProcess.ExitCode;
+
             mcProcess.WaitForExit();  // This will quietly wait until minecraft has closed
             if (exitCode != 0)      // An exit code other than 0 is an error
             {

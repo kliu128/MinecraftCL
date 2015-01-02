@@ -4,6 +4,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Windows.Media;
 using System.IO;
 using System.Net;
 using System.Windows;
@@ -218,7 +219,8 @@ namespace MinecraftCL
                 this.Close();
             else if (launchReturn.returnType == LaunchReturnType.AuthenticationError)
             {
-                // do stuff
+                debugLabel.Text = "Authentication error. Check your username and password.";
+                debugLabel.Foreground = Brushes.Red;
             }
             else
             {
