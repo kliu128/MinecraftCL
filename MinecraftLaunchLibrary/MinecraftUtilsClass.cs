@@ -18,8 +18,9 @@ namespace MinecraftLaunchLibrary
 {
     public struct downloadGameReturn
     {
-        public List<string> DownloadedLibraries;
-        public List<Asset> DownloadedAssets;
+        public List<string> DownloadedLibraryLocations;
+        public string AssetIndex;
+        public string MainClass;
         public string ReturnValue;
         public DateTime DownloadTime;
     }
@@ -487,6 +488,16 @@ namespace MinecraftLaunchLibrary
 
                 #endregion
                 
+                // Return download information that is necessary for starting the game.
+                return new downloadGameReturn
+                {
+                    AssetIndex = mcAssetsVersion,
+                    DownloadedLibraryLocations = downloadedLibraryLocations,
+                    DownloadTime = DateTime.Now,
+                    MainClass = mcMainClass,
+                    ReturnValue = "success"
+                };
+
                 #region Save version information to XML
 
                 string[] minecraftArgumentsArray = downloadedLibraryLocations.ToArray<string>();
@@ -538,15 +549,13 @@ namespace MinecraftLaunchLibrary
                         MinecraftVersion = mcVersion,
                         Stage = DownloadUpdateStage.CompletedDownload
                     });
-
-                return new downloadGameReturn { DownloadedLibraries = downloadedLibraryLocations, ReturnValue = "success" }; // Return success in downloading
             }
             catch (Exception e)
             {
                 // An exception occured
                 return new downloadGameReturn { ReturnValue = "An error occurred while downloading files. " + e.Message };
             }
-            #endregion*/
+            #endregion
         }
 
         /// <summary>

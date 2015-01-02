@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Xml;
 
@@ -54,7 +55,11 @@ namespace MinecraftCL
                     {
                         if (item.id == minecraftVersion)
                         {
-                            DateTime serverReleaseTime = DateTime.ParseExact(item.releaseTime, "yyyy'-'MM'-'dd'T'HH:mm:sszzz", null);
+                            string itemReleaseTime = item.releaseTime;
+
+                            // ..um, what? Format of date string above is different than versions.json date string.
+                            // Format string should be "yyyy'-'MM'-'dd'T'HH:mm:sszzz".
+                            DateTime serverReleaseTime = DateTime.Parse(itemReleaseTime, null);
                             DateTime savedDownloadTime = DateTime.Parse(doc.SelectSingleNode(@"//versions/version[@version='" + minecraftVersion + "']/savedReleaseTime").InnerText);
                             if (serverReleaseTime > savedDownloadTime)
                             {
@@ -160,9 +165,7 @@ namespace MinecraftCL
             
             // Get version information for the VANILLA version of minecraft, whether we're launching a modpack or not
             string versionInformationError;
-            bool mcVersionExists = getVersionInformation(ref sGV, out versionInformationError);
-            if (versionInformationError != "")
-                return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
+            bool mcVersionExists = checkMinecraftExists(sGV.Version);
 
             if (!mcVersionExists)
             {
@@ -223,7 +226,7 @@ namespace MinecraftCL
                         if (downloadReturn.ReturnValue == "success")
                         {
                             // Piece together the downloaded library arguments.
-                            foreach (string library in downloadReturn.DownloadedLibraries)
+                            foreach (string library in downloadReturn.DownloadedLibraryLocations)
                             {
                                 sGV.MCLibraryArguments += "\"" + library.Replace("%mcInstallDir%", Environment.CurrentDirectory) + "\";";
                             }
@@ -252,6 +255,11 @@ namespace MinecraftCL
             else
             {
                 // The version already exists, launch game
+
+                getVersionInformation(ref sGV, out versionInformationError);
+                if (versionInformationError != "")
+                    return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
+
                 #region Backup Minecraft worlds if specified
                 if (sGV.AutoBackupWorld == true && Directory.Exists(sGV.InstallDir + @"\.minecraft\saves\"))
                 {
