@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Xml;
 
 namespace MinecraftCL
@@ -172,6 +173,7 @@ namespace MinecraftCL
                 DownloadDialog downloadDialog = new DownloadDialog();
                 LaunchGameReturn? gameReturn = null;
                 BackgroundWorker worker = new BackgroundWorker();
+                worker.WorkerReportsProgress = true;
 
                 MinecraftUtils.DownloadUpdateEventHandler downloadUpdateDelegate = delegate(DownloadUpdateEventArgs x)
                     {
@@ -180,7 +182,8 @@ namespace MinecraftCL
                 MinecraftUtils.DownloadUpdateEvent += downloadUpdateDelegate;
 
                 bool downloadError = false;
-                worker.WorkerReportsProgress = true;
+                AutoResetEvent reset = new AutoResetEvent(false);
+
                 worker.DoWork += (o, x) =>
                     {
                         // Download the game
@@ -188,8 +191,7 @@ namespace MinecraftCL
                     };
                 worker.ProgressChanged += (o, x) =>
                     {
-                        DownloadUpdateEventArgs eventArgs = (DownloadUpdateEventArgs)x.UserState;
-
+                        DownloadUpdateEventArgs eventArgs = (DownloadUpdateEventArgs)(x.UserState);
                         UpdateDownloadDialog(eventArgs, downloadDialog);
                     };
                 worker.RunWorkerCompleted += (o, x) =>
@@ -210,6 +212,8 @@ namespace MinecraftCL
                         }
                         else
                             downloadError = true;
+
+                        reset.Set();
                     };
 
                 // Start the download thread, and show the download dialog.
@@ -217,7 +221,7 @@ namespace MinecraftCL
                 downloadDialog.ShowDialog();
 
                 // This will wait until either the game has started and ended, or until a download error occurs.
-                while (gameReturn == null && downloadError == false);
+                reset.WaitOne();
 
                 if (downloadError == true)
                     // If there was a download error, forward it to the caller.
@@ -277,7 +281,7 @@ namespace MinecraftCL
                     throw new Exception();
             }
 
-            string downloadMessage = downloadStringPrefix + eventArgs.CurrentFile + " for Minecraft version " + eventArgs.MinecraftVersion;
+            string downloadMessage = downloadStringPrefix + eventArgs.CurrentFile + " for Minecraft version " + eventArgs.MinecraftVersion + "...";
 
             dialog.downloadUpdateInfo = downloadMessage;
             DebugConsole.Print(downloadMessage, "DownloadGame()", "INFO/DOWNLOAD");
