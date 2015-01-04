@@ -26,6 +26,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Threading;
 using System.Xml.Serialization;
+using MinecraftLaunchLibrary;
 
 namespace MinecraftCL
 {
@@ -110,11 +111,12 @@ namespace MinecraftCL
             }
         }
 
-        public SettingsWindow(WindowViewModel WindowViewModel, dynamic mcVersionDynamic)
+        public SettingsWindow(WindowViewModel WindowViewModel)
         {
             InitializeComponent();
             ViewModel = WindowViewModel;
             this.DataContext = ViewModel;
+            dynamic mcVersionDynamic = MinecraftServerUtils.GetVersionsJson();
             
             if (mcVersionDynamic != null) // If there is internet connectivity, add versions from Mojang servers
             {

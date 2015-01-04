@@ -22,7 +22,6 @@ namespace MinecraftCL
         bool usernameEntered = false;
         bool passwordEntered = false;
         string mcInstallDir = "";
-        dynamic mcVersionDynamic = null;
         bool autoBackupWorlds = false;
 
         public class comboBox
@@ -251,7 +250,7 @@ namespace MinecraftCL
 
         private void settingsButton_Click(object sender, RoutedEventArgs e)
         {
-            SettingsWindow settingsWindow = new SettingsWindow(ViewModel, mcVersionDynamic);
+            SettingsWindow settingsWindow = new SettingsWindow(ViewModel);
             settingsWindow.ShowDialog();
         }
         private void usernameBox_GotFocus(object sender, RoutedEventArgs e)
