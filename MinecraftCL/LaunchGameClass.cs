@@ -190,31 +190,7 @@ namespace MinecraftCL
                     {
                         DownloadUpdateEventArgs eventArgs = (DownloadUpdateEventArgs)x.UserState;
 
-                        string downloadStringPrefix = null;
-                        switch (eventArgs.Stage)
-                        {
-                            case DownloadUpdateStage.DownloadingGenericFile:
-                                downloadStringPrefix = "Downloading file ";
-                                break;
-                            case DownloadUpdateStage.DownloadingLibrary:
-                                downloadStringPrefix = "Downloading library ";
-                                break;
-                            case DownloadUpdateStage.ExtractingNativeLibrary:
-                                downloadStringPrefix = "Extracting library ";
-                                break;
-                            case DownloadUpdateStage.DownloadingMinecraftJar:
-                                downloadStringPrefix = "Downloading Minecraft jar file ";
-                                break;
-                            case DownloadUpdateStage.DownloadingAsset:
-                                downloadStringPrefix = "Downloading asset ";
-                                break;
-                            case DownloadUpdateStage.CompletedDownload:
-                                downloadDialog.downloadUpdateInfo = "Download completed.";
-                                return;
-                            default:
-                                throw new Exception();
-                        }
-                        downloadDialog.downloadUpdateInfo = downloadStringPrefix + eventArgs.CurrentFile + " for Minecraft version " + eventArgs.MinecraftVersion;
+                        UpdateDownloadDialog(eventArgs, downloadDialog);
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {
@@ -274,6 +250,38 @@ namespace MinecraftCL
             }
         }
 
+        private static void UpdateDownloadDialog(DownloadUpdateEventArgs eventArgs, DownloadDialog dialog)
+        {
+            string downloadStringPrefix = null;
+            switch (eventArgs.Stage)
+            {
+                case DownloadUpdateStage.DownloadingGenericFile:
+                    downloadStringPrefix = "Downloading file ";
+                    break;
+                case DownloadUpdateStage.DownloadingLibrary:
+                    downloadStringPrefix = "Downloading library ";
+                    break;
+                case DownloadUpdateStage.ExtractingNativeLibrary:
+                    downloadStringPrefix = "Extracting library ";
+                    break;
+                case DownloadUpdateStage.DownloadingMinecraftJar:
+                    downloadStringPrefix = "Downloading Minecraft jar file ";
+                    break;
+                case DownloadUpdateStage.DownloadingAsset:
+                    downloadStringPrefix = "Downloading asset ";
+                    break;
+                case DownloadUpdateStage.CompletedDownload:
+                    dialog.downloadUpdateInfo = "Download completed.";
+                    return;
+                default:
+                    throw new Exception();
+            }
+
+            string downloadMessage = downloadStringPrefix + eventArgs.CurrentFile + " for Minecraft version " + eventArgs.MinecraftVersion;
+
+            dialog.downloadUpdateInfo = downloadMessage;
+            DebugConsole.Print(downloadMessage, "DownloadGame()", "INFO/DOWNLOAD");
+        }
 
         /// <summary>
         /// Starts the game. Requires Minecraft to be downloaded.

@@ -293,7 +293,7 @@ namespace MinecraftLaunchLibrary
             // return code 1 = skipped file
             WebClientNoKeepAlive webClient = new WebClientNoKeepAlive();
             FileInfo savedFile = new FileInfo(saveLocation);
-            bool returnValue = true;
+            bool fileDownloaded = true;
 
             // Notify the user that we are downloading
             TriggerDownloadUpdateEvent(downloadEventArgs);
@@ -307,18 +307,18 @@ namespace MinecraftLaunchLibrary
                     {
                         // If the file sizes don't match, redownload the file
                         webClient.DownloadFile(downloadLocation, saveLocation);
-                        returnValue = true;
+                        fileDownloaded = true;
                     }
                     else
                     {
-                        returnValue = false;
+                        fileDownloaded = false;
                     }
                 }
                 else
                 {
                     // If there is no specified file size, simply revalidate the file by redownloading it
                     webClient.DownloadFile(downloadLocation, saveLocation);
-                    returnValue = true;
+                    fileDownloaded = true;
                 }
             }
             else
@@ -334,15 +334,15 @@ namespace MinecraftLaunchLibrary
                 if (HEADresponse.LastModified > savedFile.LastWriteTime)
                 {
                     webClient.DownloadFile(downloadLocation, saveLocation);
-                    returnValue = true;
+                    fileDownloaded = true;
                 }
 
                 // Close connection to server, prevents timeouts because of a concurrent thread limit
                 HEADresponse.Close();
-                returnValue = false;
+                fileDownloaded = false;
             }
 
-            return returnValue;
+            return fileDownloaded;
         }
 
         public static downloadGameReturn DownloadGame(downloadVariables downloaderInfo)
