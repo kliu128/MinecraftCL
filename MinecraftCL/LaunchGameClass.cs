@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace MinecraftCL
 {
@@ -117,7 +118,7 @@ namespace MinecraftCL
                 XmlDocument doc = new XmlDocument();
                 doc.Load(System.Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
 
-                mcAssetsVersion = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/mcAssetsVersion").InnerText;
+                mcAssetsVersion = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/assetIndex").InnerText;
                 sGV.MCLibraryArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/minecraftLibraryList").InnerText;
                 sGV.MainClass = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/mainClass").InnerText;
                 startingArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/startingArguments").InnerText;
@@ -147,7 +148,7 @@ namespace MinecraftCL
         /// <param name="profile">The profile to be launched</param>
         /// <param name="sGV">Start Game Variables</param>
         /// <returns></returns>
-        public static LaunchGameReturn BeginLaunch(profileSelection profile, startGameVariables sGV)
+        public static LaunchGameReturn DownloadAndStartGame(profileSelection profile, startGameVariables sGV)
         {
             downloadVariables downloadVar = new downloadVariables
             {
@@ -201,11 +202,7 @@ namespace MinecraftCL
                         downloadDialog.Close();
                         if (downloadReturn.ReturnValue == "success")
                         {
-                            // Piece together the downloaded library arguments.
-                            foreach (string library in downloadReturn.DownloadedLibraryLocations)
-                            {
-                                sGV.MCLibraryArguments += "\"" + library.Replace("%mcInstallDir%", Environment.CurrentDirectory) + "\";";
-                            }
+                            SaveVersionInformation(downloadReturn);
 
                             // Start the game
                             gameReturn = StartGame(profile, sGV);
@@ -251,6 +248,52 @@ namespace MinecraftCL
 
                 LaunchGameReturn gameReturn = StartGame(profile, sGV);
                 return gameReturn;
+            }
+        }
+
+        private static void SaveVersionInformation(downloadGameReturn info)
+        {
+            string[] libraryLocationsArray = info.DownloadedLibraryLocations.ToArray();
+            string libraryLaunchString = String.Join("\";\"", libraryLocationsArray);
+            libraryLaunchString = "\"" + libraryLaunchString + "\"";
+
+            bool versionInformationExists = false;
+
+            using (XmlReader reader = XmlReader.Create(Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml"))
+            {
+                while (reader.Read())
+                {
+                    if (reader.IsStartElement() && reader.Name == "version" && reader.GetAttribute("version") == info.MinecraftVersion)
+                    {
+                        // If the version is already in the XML, update the information
+                        reader.Close();
+                        versionInformationExists = true;
+                        XmlDocument versionInformationXML = new XmlDocument();
+                        versionInformationXML.Load(Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
+                        versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + info.MinecraftVersion + "']/assetIndex").InnerText = info.AssetIndex;
+                        versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + info.MinecraftVersion + "']/minecraftLibraryList").InnerText = libraryLaunchString;
+                        versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + info.MinecraftVersion + "']/mainClass").InnerText = info.MainClass;
+                        versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + info.MinecraftVersion + "']/startingArguments").InnerText = info.LaunchArguments;
+                        versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + info.MinecraftVersion + "']/savedReleaseTime").InnerText = DateTime.Now.ToString();
+                        versionInformationXML.Save(Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
+                    }
+                }
+            }
+
+            if (versionInformationExists == false)
+            {
+                // Add the version into the XML file if it does not already exist.
+                XDocument doc = XDocument.Load(Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
+
+                XElement mcXMLValues = new XElement("version",
+                    new XAttribute("version", info.MinecraftVersion), new XAttribute("type", "MojangVanilla"), // TODO: change MojangVanilla to the modpack type
+                    new XElement("assetIndex", info.AssetIndex),
+                    new XElement("minecraftLibraryList", libraryLaunchString),
+                    new XElement("mainClass", info.MainClass),
+                    new XElement("startingArguments", info.LaunchArguments),
+                    new XElement("savedReleaseTime", DateTime.Now.ToString()));
+                doc.Root.Add(mcXMLValues);
+                doc.Save(Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
             }
         }
 

@@ -22,6 +22,7 @@ namespace MinecraftLaunchLibrary
         public string AssetIndex { get; set; }
         public string MainClass { get; set; }
         public string ReturnValue { get; set; }
+        public string MinecraftVersion { get; set; }
         
         /// <summary>
         /// The time that Minecraft was downloaded.
@@ -353,7 +354,6 @@ namespace MinecraftLaunchLibrary
                 bool validateFiles = downloaderInfo.ValidateFiles;
                 string mcMainClass = "";
                 string launchArguments = "";
-                string minecraftArguments = "";
                 string mcVersion = downloaderInfo.mcVersion;
                 string mcInstallDir = downloaderInfo.mcInstallDir;
                 
@@ -458,7 +458,6 @@ namespace MinecraftLaunchLibrary
                         Stage = DownloadUpdateStage.DownloadingMinecraftJar
                     });
 
-                #region Download Assets
                 if (!System.IO.Directory.Exists(mcInstallDir + @"\.minecraft\assets\indexes\"))
                 {
                     // Create assets/indexes directory if it does not exist
@@ -496,8 +495,14 @@ namespace MinecraftLaunchLibrary
                     DownloadAsset(asset, mcInstallDir, validateFiles, mcVersion, mcAssetsVersion);
                 }
 
-                #endregion
-                
+                // Trigger event for download completion
+                TriggerDownloadUpdateEvent(new DownloadUpdateEventArgs
+                    {
+                        CurrentFile = null,
+                        MinecraftVersion = mcVersion,
+                        Stage = DownloadUpdateStage.CompletedDownload
+                    });
+
                 // Return download information that is necessary for starting the game.
                 return new downloadGameReturn
                 {
@@ -506,67 +511,16 @@ namespace MinecraftLaunchLibrary
                     DownloadTime = DateTime.Now,
                     MainClass = mcMainClass,
                     ReturnValue = "success",
-                    LaunchArguments = launchArguments
+                    LaunchArguments = launchArguments,
+                    MinecraftVersion = mcVersion
                 };
-
-                #region Save version information to XML
-
-                string[] minecraftArgumentsArray = downloadedLibraryLocations.ToArray<string>();
-                minecraftArguments = String.Join("\";\"", minecraftArgumentsArray);
-                minecraftArguments = "\"" + minecraftArguments + "\"";
-
-                bool versionInformationExists = false;
-
-                using (XmlReader reader = XmlReader.Create(mcInstallDir + "\\.mcl\\VersionInformation.xml"))
-                {
-                    while (reader.Read())
-                    {
-                        if (reader.IsStartElement() && reader.Name == "version" && reader.GetAttribute("version") == mcVersion)
-                        {
-                            reader.Close();
-                            // Update version information
-                            versionInformationExists = true;
-                            XmlDocument versionInformationXML = new XmlDocument();
-                            versionInformationXML.Load(mcInstallDir + "\\.mcl\\VersionInformation.xml");
-                            versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/mcAssetsVersion").InnerText = mcAssetsVersion;
-                            versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/minecraftLibraryList").InnerText = minecraftArguments;
-                            versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/mainClass").InnerText = mcMainClass;
-                            versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/startingArguments").InnerText = launchArguments;
-                            versionInformationXML.DocumentElement.SelectSingleNode(@"//versions/version[@version='" + mcVersion + "']/savedReleaseTime").InnerText = DateTime.Now.ToString();
-                            versionInformationXML.Save(mcInstallDir + "\\.mcl\\VersionInformation.xml");
-                        }
-                    }
-                }
-
-                if (versionInformationExists == false)
-                {
-                    // Add the version into the XML file
-                    XDocument doc = XDocument.Load(mcInstallDir + "\\.mcl\\VersionInformation.xml");
-                    XElement mcXMLValues = new XElement("version",
-                        new XAttribute("version", mcVersion), new XAttribute("type", "MojangVanilla"), // TODO: change MojangVanilla to the modpack type
-                        new XElement("mcAssetsVersion", mcAssetsVersion),
-                        new XElement("minecraftLibraryList", minecraftArguments),
-                        new XElement("mainClass", mcMainClass),
-                        new XElement("startingArguments", launchArguments),
-                        new XElement("savedReleaseTime", DateTime.Now.ToString()));
-                    doc.Root.Add(mcXMLValues);
-                    doc.Save(mcInstallDir + "\\.mcl\\VersionInformation.xml");
-                }
-
-                // Trigger event for download completion
-                TriggerDownloadUpdateEvent(new DownloadUpdateEventArgs
-                    {
-                        CurrentFile = null,
-                        MinecraftVersion = mcVersion,
-                        Stage = DownloadUpdateStage.CompletedDownload
-                    });
+                
             }
             catch (Exception e)
             {
                 // An exception occured
                 return new downloadGameReturn { ReturnValue = "An error occurred while downloading files. " + e.Message };
             }
-            #endregion
         }
 
         /// <summary>

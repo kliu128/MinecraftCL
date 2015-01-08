@@ -212,7 +212,7 @@ namespace MinecraftCL
                 AutoBackupWorld = autoBackupWorlds
             };
 
-            LaunchGameReturn launchReturn = LaunchGame.BeginLaunch(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
+            LaunchGameReturn launchReturn = LaunchGame.DownloadAndStartGame(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
 
             if (launchReturn.returnType == LaunchReturnType.SuccessfulLaunch)
                 this.Close();
