@@ -102,5 +102,11 @@ namespace MinecraftCL
             // Show download window
             downloaderVariables.DownloadDialog.ShowDialog();*/
         }
+
+        private void copyToClipboardButton_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(this.errorMessageBox.Text);
+            MessageBox.Show("Error information copied to clipboard!");
+        }
     }
 }

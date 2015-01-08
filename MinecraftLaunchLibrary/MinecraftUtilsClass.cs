@@ -47,14 +47,13 @@ namespace MinecraftLaunchLibrary
     public struct downloadVariables
     {
         public string mcVersion;
-        public string mcInstallDir;
         public bool ValidateFiles;
     }
 
     public class startGameVariables
     {
         public string Version { get; set; }
-        public string InstallDir { get; set; }
+        public string MinecraftDirectory { get; set; }
         public string MCLibraryArguments { get; set; }
         public string MainClass { get; set; }
         public string LaunchArguments { get; set; }
@@ -230,7 +229,7 @@ namespace MinecraftLaunchLibrary
         /// <returns>Returns the Minecraft java process.</returns>
         public static startGameReturn Start(startGameVariables sGV)
         {
-            string installPath = "";
+            string javaInstallPath;
 
             // Begin to set up Minecraft java process
             ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -242,7 +241,7 @@ namespace MinecraftLaunchLibrary
             string environmentPath = Environment.GetEnvironmentVariable("JAVA_HOME");
             if (!string.IsNullOrEmpty(environmentPath))
             {
-                installPath = environmentPath;
+                javaInstallPath = environmentPath;
             }
 
             string javaKey = "SOFTWARE\\JavaSoft\\Java Runtime Environment\\";
@@ -251,14 +250,14 @@ namespace MinecraftLaunchLibrary
                 string currentVersion = rk.GetValue("CurrentVersion").ToString();
                 using (Microsoft.Win32.RegistryKey key = rk.OpenSubKey(currentVersion))
                 {
-                    installPath = key.GetValue("JavaHome").ToString();
+                    javaInstallPath = key.GetValue("JavaHome").ToString();
                 }
             }
 
-            string filePath = System.IO.Path.Combine(installPath, "bin\\javaw.exe");
-            if (System.IO.File.Exists(filePath))
+            string javaFilePath = System.IO.Path.Combine(javaInstallPath, "bin\\javaw.exe");
+            if (System.IO.File.Exists(javaFilePath))
             {
-                startInfo.FileName = filePath;
+                startInfo.FileName = javaFilePath;
             }
             else
             {
@@ -267,12 +266,12 @@ namespace MinecraftLaunchLibrary
             #endregion
 
             string pArguments = "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump " + sGV.JavaArguments + " -Djava.library.path=\""
-            + sGV.InstallDir + @"\.minecraft\versions\"
+            + Environment.CurrentDirectory + @"\.minecraft\versions\"
             + sGV.Version + @"\" + sGV.Version + "-natives\" -cp "
             + sGV.MCLibraryArguments + ";\""
-            + sGV.InstallDir + @"\.minecraft\versions\" + sGV.Version + @"\" + sGV.Version + ".jar\" " + sGV.MainClass + " " + sGV.LaunchArguments;
-            startInfo.Arguments = pArguments.Replace("%mcInstallDir%", sGV.InstallDir);
-            startInfo.WorkingDirectory = sGV.InstallDir;
+            + Environment.CurrentDirectory + @"\.minecraft\versions\" + sGV.Version + @"\" + sGV.Version + ".jar\" " + sGV.MainClass + " " + sGV.LaunchArguments;
+            startInfo.Arguments = pArguments.Replace("%mcInstallDir%", Environment.CurrentDirectory);
+            startInfo.WorkingDirectory = sGV.MinecraftDirectory;
 
             // Start Minecraft and return
             Process mcProc = Process.Start(startInfo);
@@ -355,7 +354,6 @@ namespace MinecraftLaunchLibrary
                 string mcMainClass = "";
                 string launchArguments = "";
                 string mcVersion = downloaderInfo.mcVersion;
-                string mcInstallDir = downloaderInfo.mcInstallDir;
                 
                 dynamic mcVersionList = MinecraftServerUtils.GetVersionsJson();
 
@@ -430,7 +428,7 @@ namespace MinecraftLaunchLibrary
                 foreach (var library in checkMcLibraries)
                 {
                     string libraryLocation;
-                    bool libraryDownloaded = DownloadLibrary(library, mcInstallDir, validateFiles, mcVersion, out libraryLocation);
+                    bool libraryDownloaded = DownloadLibrary(library, Environment.CurrentDirectory, validateFiles, mcVersion, out libraryLocation);
                     if (libraryDownloaded == true)
                     {
                         string currentDownloadType = "";
@@ -441,15 +439,15 @@ namespace MinecraftLaunchLibrary
                 }
                 #endregion
 
-                if (!System.IO.Directory.Exists(mcInstallDir + @"\.minecraft\versions\" + mcVersion + @"\"))
+                if (!System.IO.Directory.Exists(Environment.CurrentDirectory + @"\.minecraft\versions\" + mcVersion + @"\"))
                 {
                     // Create version directory if it does not exist. Ex. \.minecraft\versions\1.7.5\
-                    System.IO.Directory.CreateDirectory(mcInstallDir + @"\.minecraft\versions\" + mcVersion + @"\");
+                    System.IO.Directory.CreateDirectory(Environment.CurrentDirectory + @"\.minecraft\versions\" + mcVersion + @"\");
                 }
 
                 // Download minecraft jar
                 downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/" + mcVersion + "/" + mcVersion + ".jar",
-                    mcInstallDir + @"\.minecraft\versions\" + mcVersion + @"\" + mcVersion + ".jar",
+                    Environment.CurrentDirectory + @"\.minecraft\versions\" + mcVersion + @"\" + mcVersion + ".jar",
                     validateFiles,
                     new DownloadUpdateEventArgs
                     {
@@ -458,15 +456,15 @@ namespace MinecraftLaunchLibrary
                         Stage = DownloadUpdateStage.DownloadingMinecraftJar
                     });
 
-                if (!System.IO.Directory.Exists(mcInstallDir + @"\.minecraft\assets\indexes\"))
+                if (!System.IO.Directory.Exists(Environment.CurrentDirectory + @"\.minecraft\assets\indexes\"))
                 {
                     // Create assets/indexes directory if it does not exist
-                    System.IO.Directory.CreateDirectory(mcInstallDir + @"\.minecraft\assets\indexes\");
+                    System.IO.Directory.CreateDirectory(Environment.CurrentDirectory + @"\.minecraft\assets\indexes\");
                 }
 
                 // Download assets information, *assetversion*.json
                 downloadFile("https://s3.amazonaws.com/Minecraft.Download/indexes/" + mcAssetsVersion + ".json",
-                    mcInstallDir + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json",
+                    Environment.CurrentDirectory + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json",
                     validateFiles,
                     new DownloadUpdateEventArgs
                     {
@@ -476,7 +474,7 @@ namespace MinecraftLaunchLibrary
                     });
 
                 string assetInformationString;
-                using (StreamReader streamReader = new StreamReader(mcInstallDir + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json", Encoding.UTF8))
+                using (StreamReader streamReader = new StreamReader(Environment.CurrentDirectory + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json", Encoding.UTF8))
                 {
                     assetInformationString = streamReader.ReadToEnd();
                 }
@@ -492,7 +490,7 @@ namespace MinecraftLaunchLibrary
                         Size = Convert.ToInt64((string)dynamicAsset.Value.size) 
                     };
 
-                    DownloadAsset(asset, mcInstallDir, validateFiles, mcVersion, mcAssetsVersion);
+                    DownloadAsset(asset, Environment.CurrentDirectory, validateFiles, mcVersion, mcAssetsVersion);
                 }
 
                 // Trigger event for download completion

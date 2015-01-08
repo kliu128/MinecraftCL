@@ -126,9 +126,9 @@ namespace MinecraftCL
                 // TODO: Any better way to do this?
                 startingArguments = startingArguments.Replace("${auth_player_name}", sGV.Username);
                 startingArguments = startingArguments.Replace("${version_name}", sGV.Version);
-                startingArguments = startingArguments.Replace("${game_directory}", "\"" + sGV.InstallDir + "\\.minecraft\"");
-                startingArguments = startingArguments.Replace("${assets_root}", "\"" + sGV.InstallDir + "\\.minecraft\\assets\""); // For 1.7 and above
-                startingArguments = startingArguments.Replace("${game_assets}", "\"" + sGV.InstallDir + "\\.minecraft\\assets\\virtual\\legacy\""); // For legacy versions 1.6.4 or below
+                startingArguments = startingArguments.Replace("${game_directory}", "\"" + sGV.MinecraftDirectory + "\"");
+                startingArguments = startingArguments.Replace("${assets_root}", "\"" + Environment.CurrentDirectory + "\\.minecraft\\assets\""); // For 1.7 and above
+                startingArguments = startingArguments.Replace("${game_assets}", "\"" + Environment.CurrentDirectory + "\\.minecraft\\assets\\virtual\\legacy\""); // For legacy versions 1.6.4 or below
                 startingArguments = startingArguments.Replace("${assets_index_name}", mcAssetsVersion);
                 startingArguments = startingArguments.Replace("${auth_uuid}", sGV.UUID);
                 startingArguments = startingArguments.Replace("${auth_access_token}", sGV.AccessToken);
@@ -152,7 +152,6 @@ namespace MinecraftCL
         {
             downloadVariables downloadVar = new downloadVariables
             {
-                mcInstallDir = sGV.InstallDir,
                 mcVersion = sGV.Version,
                 ValidateFiles = false
             };
@@ -231,7 +230,7 @@ namespace MinecraftCL
             {
                 // The version already exists, launch game
                 #region Backup Minecraft worlds if specified
-                if (sGV.AutoBackupWorld == true && Directory.Exists(sGV.InstallDir + @"\.minecraft\saves\"))
+                if (sGV.AutoBackupWorld == true && Directory.Exists(sGV.MinecraftDirectory + @"\saves\"))
                 {
                     MessageWindow backupNotificationBox = new MessageWindow();
                     backupNotificationBox.messageText.Text = "Backing up worlds before starting Minecraft...";
@@ -240,7 +239,7 @@ namespace MinecraftCL
                     backupNotificationBox.Activate();
 
                     string currentDateTime = DateTime.Now.Hour + "." + DateTime.Now.Minute + "." + DateTime.Now.Millisecond + " - " + DateTime.Now.ToString("MMMM") + " " + DateTime.Now.Day + ", " + DateTime.Now.Year;
-                    DirectoryCopy.CopyRecursive(sGV.InstallDir + @"\.minecraft\saves\", sGV.InstallDir + "\\Backups\\" + currentDateTime + "\\");
+                    DirectoryCopy.CopyRecursive(sGV.MinecraftDirectory + @"\.minecraft\saves\", sGV.MinecraftDirectory + "\\Backups\\" + currentDateTime + "\\");
 
                     backupNotificationBox.Close();
                 }
@@ -379,6 +378,8 @@ namespace MinecraftCL
             getVersionInformation(ref sGV, out versionInformationError);
             if (versionInformationError != "")
                 return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
+
+            
 
             startGameReturn startReturn = MinecraftUtils.Start(sGV);
 

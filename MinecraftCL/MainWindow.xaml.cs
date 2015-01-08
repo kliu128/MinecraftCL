@@ -205,12 +205,16 @@ namespace MinecraftCL
                 Username = usernameBox.Text,
                 Password = passwordBox.Password,
 
-                InstallDir = mcInstallDir,
                 LastUsedProfile = ((profileSelection)profileSelectBox.SelectedItem).ToString(),
                 JavaArguments = ((profileSelection)profileSelectBox.SelectedValue).javaArguments,
                 Version = ((profileSelection)profileSelectBox.SelectedValue).MojangVersion,
                 AutoBackupWorld = autoBackupWorlds
             };
+
+            if (((profileSelection)profileSelectBox.SelectedValue).useCustomMinecraftDirectory)
+                sGV.MinecraftDirectory = ((profileSelection)profileSelectBox.SelectedValue).customMinecraftDirectory;
+            else
+                sGV.MinecraftDirectory = Environment.CurrentDirectory + @"\.minecraft";
 
             LaunchGameReturn launchReturn = LaunchGame.DownloadAndStartGame(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
 
