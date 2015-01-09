@@ -237,7 +237,7 @@ namespace MinecraftLaunchLibrary
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
 
-            #region Find Java installation
+            // Find java installation
             string environmentPath = Environment.GetEnvironmentVariable("JAVA_HOME");
             if (!string.IsNullOrEmpty(environmentPath))
             {
@@ -263,7 +263,6 @@ namespace MinecraftLaunchLibrary
             {
                 return new startGameReturn { StartInfo = null, MinecraftProcess = null, ErrorInfo = "Could not locate Java executable.", ReturnCode = startMinecraftReturnCode.CouldNotLocateJava };
             }
-            #endregion
 
             string pArguments = "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump " + sGV.JavaArguments + " -Djava.library.path=\""
             + Environment.CurrentDirectory + @"\.minecraft\versions\"
