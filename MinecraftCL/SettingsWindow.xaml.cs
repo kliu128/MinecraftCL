@@ -27,6 +27,8 @@ using System.ComponentModel;
 using System.Threading;
 using System.Xml.Serialization;
 using MinecraftLaunchLibrary;
+using System.Timers;
+using System.Windows.Threading;
 
 namespace MinecraftCL
 {
@@ -241,7 +243,28 @@ namespace MinecraftCL
 
             settingsDoc.Save(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml");
             #endregion
+
             Globals.SendAnalytics = ViewModel.enableAnalytics;
+
+            // Create a Timer with a Normal Priority
+            DispatcherTimer fadeTimer = new DispatcherTimer();
+
+            // Set the Interval to 2 seconds
+            fadeTimer.Interval = TimeSpan.FromMilliseconds(2000);
+
+            // Set the callback to just show the time ticking away
+            // NOTE: We are using a control so this has to run on 
+            // the UI thread
+            fadeTimer.Tick += new EventHandler(delegate(object s, EventArgs a)
+            {
+                informationLabel.Content = "";
+                fadeTimer.Stop();
+            });
+
+            // Start the timer
+            fadeTimer.Start();
+
+            informationLabel.Content = "Settings successfully saved.";
         }
 
         private void versionSelectBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -417,7 +440,6 @@ namespace MinecraftCL
         private void useModpackCheckbox_Checked(object sender, RoutedEventArgs e)
         {
             // If a modpack is not selected, select one
-            // TODO: Why is this necessary? selectedindex should = 0 already
             if (modpackSelectBox.SelectedIndex == -1)
                 modpackSelectBox.SelectedIndex = 0;
         }

@@ -176,12 +176,12 @@ namespace MinecraftCL.FeedTheBeast
                 }
 
                 // Pick a random server from the list
-                // TODO: Make this non-random?
                 int randomMirrorIndex = new Random().Next(downloadMirrorList.Count);
                 FTBLocations.DownloadServer = downloadMirrorList[randomMirrorIndex];
                 DebugConsole.Print("InitializeDLServers() has selected " + FTBLocations.DownloadServer + " as mirror.", "FTBUtils.InitializeDLServers()");
                 return true;
             }
+
             // No internet connectivity, so obviously can't find download servers!
             return false;
         }

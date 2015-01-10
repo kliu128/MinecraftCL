@@ -48,8 +48,8 @@ namespace MinecraftCL
 
             if (doc.SelectSingleNode("//versions/version[@version='" + minecraftVersion + "']") != null)
             {
-                // If //versions/version[$version] is null, the version has not been recorded
-                // Now check to see if the version has been updated
+                // If //versions/version[$version] isn't null, the version has already been recorded
+                // Now to check to see if the version has been updated.
                 if (mcVersionDynamic != null)
                 {
                     // Check in mcVersionDynamic (version.json file) to see if the version needs to be redownloaded
@@ -122,8 +122,8 @@ namespace MinecraftCL
                 sGV.MCLibraryArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/minecraftLibraryList").InnerText;
                 sGV.MainClass = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/mainClass").InnerText;
                 startingArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/startingArguments").InnerText;
+
                 // Replace all of the various variables used with their actual values
-                // TODO: Any better way to do this?
                 startingArguments = startingArguments.Replace("${auth_player_name}", sGV.Username);
                 startingArguments = startingArguments.Replace("${version_name}", sGV.Version);
                 startingArguments = startingArguments.Replace("${game_directory}", "\"" + sGV.MinecraftDirectory + "\"");
@@ -377,11 +377,6 @@ namespace MinecraftCL
             xDoc.Save(System.Environment.CurrentDirectory + "//.mcl//MinecraftCLSettings.xml");
             #endregion
 
-            string versionInformationError;
-            getVersionInformation(ref sGV, out versionInformationError);
-            if (versionInformationError != "")
-                return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
-
             // Set custom Minecraft directory if specified in profile.
             if (profile.useCustomMinecraftDirectory)
                 sGV.MinecraftDirectory = profile.customMinecraftDirectory;
@@ -391,6 +386,11 @@ namespace MinecraftCL
             // Set custom java location if specified in profile.
             if (profile.useCustomJavaEXE)
                 sGV.JavaLocation = profile.customJavaEXE;
+
+            string versionInformationError;
+            getVersionInformation(ref sGV, out versionInformationError);
+            if (versionInformationError != "")
+                return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
 
             startGameReturn startReturn = MinecraftUtils.Start(sGV);
 

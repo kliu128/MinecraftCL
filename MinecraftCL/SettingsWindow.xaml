@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings" Height="457.95" Width="411"
         WindowStyle="ToolWindow" ResizeMode="NoResize">
+
     <Grid Height="427" VerticalAlignment="Top">
         <Label Content="Profile" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.536,0.504" Width="44" Height="26"/>
         <ComboBox x:Name="profileSelectBox" IsSynchronizedWithCurrentItem="True" SelectedValue="{Binding Path=SelectedProfile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=SelectedProfile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" ItemsSource="{Binding Path=profileCollection, IsAsync=True,Mode=TwoWay}" SelectionChanged="profileSelectBox_SelectionChanged" HorizontalAlignment="Left" Margin="54,10,0,0" VerticalAlignment="Top" Width="250" Height="26"/>
@@ -15,7 +16,7 @@
 
 
         <Separator HorizontalAlignment="Left" Height="1" Margin="10,41,0,0" VerticalAlignment="Top" Width="385"/>
-        <Label x:Name="downloadedFilesLabel" Content="" HorizontalAlignment="Left" Margin="10,397,0,0" VerticalAlignment="Top" Width="272"/>
+        <Label x:Name="informationLabel" Content="" Foreground="LightGreen" HorizontalAlignment="Left" Margin="10,392,0,0" VerticalAlignment="Top" Width="272"/>
         <Button x:Name="createNewProfileButton" Click="createNewProfileButton_Click" Content="New" HorizontalAlignment="Left" Margin="309,10,0,0" VerticalAlignment="Top" Width="32" Height="26"/>
         <CheckBox 
             x:Name="useCustomMCDirectory" 
