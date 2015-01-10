@@ -58,6 +58,8 @@ namespace MinecraftCL
                 default:
                     throw new NotImplementedException();
             }
+
+            DebugConsole.Print("Began timing analytics for " + Enum.GetName(typeof(TimingsMeasureType), type), "Analytics.BeginTiming()", "INFO/ANALYTICS");
         }
 
         public static void StopTiming(TimingsMeasureType type)
@@ -95,6 +97,8 @@ namespace MinecraftCL
             }
 
             analyticsList.Add(new AnalyticsData { MinecraftCLVersion = Globals.MinecraftCLVersion, analyticsType = type, analyticsTime = analyticsTime } );
+
+            DebugConsole.Print("Finished timing analytics for " + Enum.GetName(typeof(TimingsMeasureType), type) + ", it took " + analyticsTime, "Analytics.StopTiming()", "INFO/ANALYTICS");
         }
 
         /// <summary>

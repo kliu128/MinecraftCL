@@ -107,10 +107,9 @@ namespace MinecraftCL
                 XMLCreate.Close();
             }
 
-            // Create MinecraftCLSettings.xml
+            // Create MinecraftCLSettings.xml if it doesn't exist
             if (!File.Exists(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml"))
             {
-                // Create the version information file if it doesn't exist
                 XmlTextWriter XMLCreate = new XmlTextWriter(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml", null);
                 XMLCreate.WriteStartDocument();
                 XMLCreate.WriteStartElement("settings", "");
@@ -199,6 +198,7 @@ namespace MinecraftCL
             DebugConsole.Print("Starting minecraft version " + ((profileSelection)profileSelectBox.SelectedValue).MojangVersion + ".", "MainWindow");
 
             ControlsGrid.IsEnabled = false;
+            LaunchGame.MinecraftStartedEvent += LaunchGame_MinecraftStartedEvent;
 
             startGameVariables sGV = new startGameVariables
             {
@@ -211,15 +211,13 @@ namespace MinecraftCL
                 AutoBackupWorld = autoBackupWorlds
             };
 
-            if (((profileSelection)profileSelectBox.SelectedValue).useCustomMinecraftDirectory)
-                sGV.MinecraftDirectory = ((profileSelection)profileSelectBox.SelectedValue).customMinecraftDirectory;
-            else
-                sGV.MinecraftDirectory = Environment.CurrentDirectory + @"\.minecraft";
-
             LaunchGameReturn launchReturn = LaunchGame.DownloadAndStartGame(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
 
             if (launchReturn.returnType == LaunchReturnType.SuccessfulLaunch)
+            {
                 this.Close();
+                return;
+            }
             else if (launchReturn.returnType == LaunchReturnType.AuthenticationError)
             {
                 debugLabel.Text = "Authentication error. Check your username and password.";
@@ -250,6 +248,18 @@ namespace MinecraftCL
             }
 
             ControlsGrid.IsEnabled = true;
+            LaunchGame.MinecraftStartedEvent -= LaunchGame_MinecraftStartedEvent;
+
+            this.WindowState = System.Windows.WindowState.Normal;
+            this.ShowInTaskbar = true;
+            this.Show();
+        }
+
+        void LaunchGame_MinecraftStartedEvent()
+        {
+            this.Hide();
+            this.ShowInTaskbar = false;
+            this.WindowState = System.Windows.WindowState.Minimized;
         }
 
         private void settingsButton_Click(object sender, RoutedEventArgs e)

@@ -329,6 +329,9 @@ namespace MinecraftCL
             DebugConsole.Print(downloadMessage, "DownloadGame()", "INFO/DOWNLOAD");
         }
 
+        public delegate void MinecraftStartedEventHandler();
+        public static event MinecraftStartedEventHandler MinecraftStartedEvent;
+
         /// <summary>
         /// Starts the game. Requires Minecraft to be downloaded.
         /// </summary>
@@ -379,9 +382,20 @@ namespace MinecraftCL
             if (versionInformationError != "")
                 return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
 
-            
+            // Set custom Minecraft directory if specified in profile.
+            if (profile.useCustomMinecraftDirectory)
+                sGV.MinecraftDirectory = profile.customMinecraftDirectory;
+            else
+                sGV.MinecraftDirectory = Environment.CurrentDirectory + @"\.minecraft";
+
+            // Set custom java location if specified in profile.
+            if (profile.useCustomJavaEXE)
+                sGV.JavaLocation = profile.customJavaEXE;
 
             startGameReturn startReturn = MinecraftUtils.Start(sGV);
+
+            if (MinecraftStartedEvent != null)
+                MinecraftStartedEvent();
 
             Process mcProcess = startReturn.MinecraftProcess;
             string javaOutput = mcProcess.StandardOutput.ReadToEnd();

@@ -58,6 +58,7 @@ namespace MinecraftLaunchLibrary
         public string MainClass { get; set; }
         public string LaunchArguments { get; set; }
         public string JavaArguments { get; set; }
+        public string JavaLocation { get; set; }
 
         public string LastUsedProfile { get; set; }
         public bool AutoBackupWorld { get; set; }
@@ -222,47 +223,79 @@ namespace MinecraftLaunchLibrary
         }
 
         /// <summary>
-        /// Starts the game/modpack, providing that the proper values have already been determined
-        /// (such as authToken, versionInfo, etc.). It also waits until Minecraft stops and returns
-        /// what happened.
+        /// Attempts to locate Java installation. Returns null if not found.
         /// </summary>
-        /// <returns>Returns the Minecraft java process.</returns>
-        public static startGameReturn Start(startGameVariables sGV)
+        /// <returns></returns>
+        public static string LocateJavaInstallation()
         {
+            // Find java installation
             string javaInstallPath;
 
-            // Begin to set up Minecraft java process
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.UseShellExecute = false;
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;
-
-            // Find java installation
             string environmentPath = Environment.GetEnvironmentVariable("JAVA_HOME");
             if (!string.IsNullOrEmpty(environmentPath))
             {
                 javaInstallPath = environmentPath;
             }
-
-            string javaKey = "SOFTWARE\\JavaSoft\\Java Runtime Environment\\";
-            using (Microsoft.Win32.RegistryKey rk = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(javaKey))
+            else
             {
-                string currentVersion = rk.GetValue("CurrentVersion").ToString();
-                using (Microsoft.Win32.RegistryKey key = rk.OpenSubKey(currentVersion))
+                try
                 {
-                    javaInstallPath = key.GetValue("JavaHome").ToString();
+                    string javaKey = "SOFTWARE\\JavaSoft\\Java Runtime Environment\\";
+                    using (Microsoft.Win32.RegistryKey rk = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(javaKey))
+                    {
+                        string currentVersion = rk.GetValue("CurrentVersion").ToString();
+                        using (Microsoft.Win32.RegistryKey key = rk.OpenSubKey(currentVersion))
+                        {
+                            javaInstallPath = key.GetValue("JavaHome").ToString();
+                        }
+                    }
+                }
+                catch
+                {
+                    return null;
                 }
             }
 
             string javaFilePath = System.IO.Path.Combine(javaInstallPath, "bin\\javaw.exe");
             if (System.IO.File.Exists(javaFilePath))
             {
-                startInfo.FileName = javaFilePath;
+                return javaFilePath;
             }
             else
             {
-                return new startGameReturn { StartInfo = null, MinecraftProcess = null, ErrorInfo = "Could not locate Java executable.", ReturnCode = startMinecraftReturnCode.CouldNotLocateJava };
+                return null;
             }
+        }
+
+        /// <summary>
+        /// Starts the game/modpack, providing that the proper values have already been determined
+        /// (such as authToken, versionInfo, etc.).
+        /// </summary>
+        /// <returns>Returns the Minecraft java process.</returns>
+        public static startGameReturn Start(startGameVariables sGV)
+        {
+            // Begin to set up Minecraft java process
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+
+            if (String.IsNullOrEmpty(sGV.JavaLocation))
+            {
+                // Locate java installation if one is not set in sGV.JavaLocation.
+                string javaPath = LocateJavaInstallation();
+                if (javaPath != null)
+                    startInfo.FileName = javaPath;
+                else
+                    return new startGameReturn
+                    {
+                        ErrorInfo = "Could not locate java installation.",
+                        ReturnCode = startMinecraftReturnCode.CouldNotLocateJava
+                    };
+            }
+            else
+                // A java location is set.
+                startInfo.FileName = sGV.JavaLocation;
 
             string pArguments = "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump " + sGV.JavaArguments + " -Djava.library.path=\""
             + Environment.CurrentDirectory + @"\.minecraft\versions\"
