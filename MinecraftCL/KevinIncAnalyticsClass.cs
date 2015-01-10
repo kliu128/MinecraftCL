@@ -102,8 +102,7 @@ namespace MinecraftCL
         /// </summary>
         public static void UploadToServer()
         {
-            //if (Globals.SendAnalytics)
-            if (false)
+            if (Globals.SendAnalytics)
             {
                 try
                 {
