@@ -318,6 +318,7 @@ namespace MinecraftCL
                     break;
                 case DownloadUpdateStage.CompletedDownload:
                     dialog.downloadUpdateInfo = "Download completed.";
+                    DebugConsole.Print("Download completed for Minecraft version" + eventArgs.MinecraftVersion, "DownloadGame()", "INFO/DOWNLOAD");
                     return;
                 default:
                     throw new Exception();

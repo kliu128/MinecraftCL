@@ -21,8 +21,9 @@ namespace MinecraftCL
                     using (File.Create(System.Environment.CurrentDirectory + @"\.mcl\Console.log")) { }
 
                 string logLine = "[" + DateTime.Now + "] [" + messageType + "] [" + senderType + "]: " + message;
+
                 File.AppendAllText(System.Environment.CurrentDirectory + @"\.mcl\Console.log", logLine + Environment.NewLine);
-                Debug.WriteLine(logLine);
+                Trace.WriteLine(logLine);
             }
         }
     }

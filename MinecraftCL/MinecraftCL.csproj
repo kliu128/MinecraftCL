@@ -145,6 +145,7 @@
       <DependentUpon>UnhandledExceptionWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="WindowViewModel.cs" />
+    <Compile Include="XmlDataAccessLayer.cs" />
     <Page Include="AddModpackWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
