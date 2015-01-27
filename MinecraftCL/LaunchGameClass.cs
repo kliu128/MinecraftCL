@@ -395,39 +395,54 @@ namespace MinecraftCL
 
             startGameReturn startReturn = MinecraftUtils.Start(sGV);
 
-            if (MinecraftStartedEvent != null)
-                MinecraftStartedEvent();
-
-            Process mcProcess = startReturn.MinecraftProcess;
-            string javaOutput = mcProcess.StandardOutput.ReadToEnd();
-            string javaError = mcProcess.StandardError.ReadToEnd();
-            int exitCode = mcProcess.ExitCode;
-
-            mcProcess.WaitForExit();  // This will quietly wait until minecraft has closed
-            if (exitCode != 0)      // An exit code other than 0 is an error
+            switch (startReturn.ReturnCode)
             {
-                string returnInfo = "";
-                if (javaOutput.Contains("---- Minecraft Crash Report ----"))
-                {
-                    // This was an official minecraft crash, complete with crash report
-                    returnInfo = javaOutput.Substring(javaOutput.LastIndexOf("---- Minecraft Crash Report ----") + 1);
-                }
-                // Something interesting: the other crashes aren't actually caught by the official Minecraft launcher
-                else if (javaError == "")
-                {
-                    returnInfo = javaOutput;
-                }
-                else
-                {
-                    returnInfo = javaError;
-                }
-                returnInfo += Environment.NewLine + Environment.NewLine + "Launch parameters: " + startReturn.LaunchParameters;
-                return new LaunchGameReturn { returnInfo = returnInfo, returnType = LaunchReturnType.MinecraftError };
+                case startMinecraftReturnCode.StartedMinecraft:
+                    if (MinecraftStartedEvent != null)
+                        MinecraftStartedEvent();
+
+                    Process mcProcess = startReturn.MinecraftProcess;
+                    string javaOutput = mcProcess.StandardOutput.ReadToEnd();
+                    string javaError = mcProcess.StandardError.ReadToEnd();
+                    int exitCode = mcProcess.ExitCode;
+
+                    mcProcess.WaitForExit();  // This will quietly wait until minecraft has closed
+                    if (exitCode != 0)      // An exit code other than 0 is an error
+                    {
+                        string returnInfo = "";
+                        if (javaOutput.Contains("---- Minecraft Crash Report ----"))
+                        {
+                            // This was an official minecraft crash, complete with crash report
+                            returnInfo = javaOutput.Substring(javaOutput.LastIndexOf("---- Minecraft Crash Report ----") + 1);
+                        }
+                        // Something interesting: the other crashes aren't actually caught by the official Minecraft launcher
+                        else if (javaError == "")
+                        {
+                            returnInfo = javaOutput;
+                        }
+                        else
+                        {
+                            returnInfo = javaError;
+                        }
+                        returnInfo += Environment.NewLine + Environment.NewLine + "Launch parameters: " + startReturn.LaunchParameters;
+                        return new LaunchGameReturn { returnInfo = returnInfo, returnType = LaunchReturnType.MinecraftError };
+                    }
+                    else if (exitCode == 0)
+                        return new LaunchGameReturn { returnInfo = "Success.", returnType = LaunchReturnType.SuccessfulLaunch };
+                    else
+                        throw new Exception { Source = "Minecraft exited with error code " + exitCode + "." };
+
+                case startMinecraftReturnCode.CouldNotLocateJava:
+                    DebugConsole.Print("Could not locate java installation.", "LaunchGame()", "ERROR");
+                    return new LaunchGameReturn
+                    {
+                        returnInfo = startReturn.ErrorInfo,
+                        returnType = LaunchReturnType.CouldNotLocateJava
+                    };
+
+                default:
+                    throw new NotImplementedException();
             }
-            else if (exitCode == 0)
-                return new LaunchGameReturn { returnInfo = "Success.", returnType = LaunchReturnType.SuccessfulLaunch };
-            else
-                throw new Exception { Source = "Minecraft exited with error code " + exitCode + "." };
         }
     }
 }

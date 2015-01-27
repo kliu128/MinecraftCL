@@ -70,29 +70,25 @@ namespace MinecraftCL
             if (!File.Exists(System.Environment.CurrentDirectory + @"\.mcl\ProfileInformation.xml"))
             {
                 // Create the file with a default "Latest Version" profile"
-                XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<profileSelection>));
-                using (TextWriter writer = File.CreateText(Environment.CurrentDirectory + @"\.mcl\ProfileInformation.xml"))
-                {
-                    ObservableCollection<profileSelection> defaultProfile = new ObservableCollection<profileSelection>();
-                    defaultProfile.Add(
-                        new profileSelection
-                        {
-                            Name = "Latest Version",
-                            VersionType = MinecraftCL.VersionType.Mojang,
-                            MojangVersion = "latest-release",
+                ObservableCollection<profileSelection> defaultProfile = new ObservableCollection<profileSelection>();
+                defaultProfile.Add(
+                    new profileSelection
+                    {
+                        Name = "Latest Version",
+                        VersionType = MinecraftCL.VersionType.Mojang,
+                        MojangVersion = "latest-release",
 
-                            useCustomMinecraftDirectory = false,
-                            customMinecraftDirectory = "",
+                        useCustomMinecraftDirectory = false,
+                        customMinecraftDirectory = "",
 
-                            useCustomJavaArguments = false,
-                            javaArguments = "-Xmx1024M",
+                        useCustomJavaArguments = false,
+                        javaArguments = "-Xmx1024M",
 
-                            useCustomJavaEXE = false,
-                            customJavaEXE = ""
-                        });
+                        useCustomJavaEXE = false,
+                        customJavaEXE = ""
+                    });
 
-                    serializer.Serialize(writer, defaultProfile);
-                }
+                XmlDAL.SerializeXml<ObservableCollection<profileSelection>>(defaultProfile, "ProfileInformation.xml");
             }
 
             // Create VersionInformation.xml
@@ -168,11 +164,7 @@ namespace MinecraftCL
             #endregion
 
             // Load profiles
-            using (FileStream stream = new FileStream(System.Environment.CurrentDirectory + @"\.mcl\ProfileInformation.xml", FileMode.Open))
-            {
-                XmlSerializer deserializer = new XmlSerializer(typeof(ObservableCollection<profileSelection>));
-                ViewModel.profileCollection = (ObservableCollection<profileSelection>)deserializer.Deserialize(stream);
-            }
+            ViewModel.profileCollection = XmlDAL.DeserializeXml<ObservableCollection<profileSelection>>("ProfileInformation.xml");
             ViewModel.profileCollection.BubbleSort();
             this.DataContext = ViewModel;
 

@@ -178,13 +178,9 @@ namespace MinecraftCL
                     .UpdateTarget();
 
             // Load modpacks from ModpackSettings.xml
-            XmlSerializer deserializer = new XmlSerializer(typeof(ObservableCollection<Modpack>));
             try
             {
-                using (Stream reader = File.OpenRead(System.Environment.CurrentDirectory + @"\.mcl\ModpackSettings.xml"))
-                {
-                    modpackList = (ObservableCollection<Modpack>)deserializer.Deserialize(reader);
-                }
+                modpackList = XmlDAL.DeserializeXml<ObservableCollection<Modpack>>("ModpackSettings.xml");
             }
             catch (Exception)
             {
@@ -197,18 +193,10 @@ namespace MinecraftCL
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
             // Save profiles via serialization
-            XmlSerializer profileSerializer = new XmlSerializer(typeof(ObservableCollection<profileSelection>));
-            using (FileStream writer = File.Create(Environment.CurrentDirectory + @"\.mcl\ProfileInformation.xml"))
-            {
-                profileSerializer.Serialize(writer, ViewModel.profileCollection);
-            }
+            XmlDAL.SerializeXml<ObservableCollection<profileSelection>>(ViewModel.profileCollection, "ProfileInformation.xml");
 
             // Save modpack list changes
-            XmlSerializer modpackSerializer = new XmlSerializer(typeof(ObservableCollection<Modpack>));
-            using (FileStream writer = File.Create(Environment.CurrentDirectory + @"\.mcl\ModpackSettings.xml"))
-            {
-                modpackSerializer.Serialize(writer, modpackList);
-            }
+            XmlDAL.SerializeXml<ObservableCollection<Modpack>>(modpackList, "ModpackInformation.xml");
 
             #region Save settings to MinecraftCLSettings.xml
             XmlDocument settingsDoc = new XmlDocument();
