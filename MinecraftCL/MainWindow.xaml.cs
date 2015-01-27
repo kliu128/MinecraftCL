@@ -70,9 +70,9 @@ namespace MinecraftCL
             if (!File.Exists(System.Environment.CurrentDirectory + @"\.mcl\ProfileInformation.xml"))
             {
                 // Create the file with a default "Latest Version" profile"
-                ObservableCollection<profileSelection> defaultProfile = new ObservableCollection<profileSelection>();
+                ObservableCollection<CLProfile> defaultProfile = new ObservableCollection<CLProfile>();
                 defaultProfile.Add(
-                    new profileSelection
+                    new CLProfile
                     {
                         Name = "Latest Version",
                         VersionType = MinecraftCL.VersionType.Mojang,
@@ -88,7 +88,7 @@ namespace MinecraftCL
                         customJavaEXE = ""
                     });
 
-                XmlDAL.SerializeXml<ObservableCollection<profileSelection>>(defaultProfile, "ProfileInformation.xml");
+                XmlDAL.SerializeXml<ObservableCollection<CLProfile>>(defaultProfile, "ProfileInformation.xml");
             }
 
             // Create VersionInformation.xml
@@ -164,7 +164,7 @@ namespace MinecraftCL
             #endregion
 
             // Load profiles
-            ViewModel.profileCollection = XmlDAL.DeserializeXml<ObservableCollection<profileSelection>>("ProfileInformation.xml");
+            ViewModel.profileCollection = XmlDAL.DeserializeXml<ObservableCollection<CLProfile>>("ProfileInformation.xml");
             ViewModel.profileCollection.BubbleSort();
             this.DataContext = ViewModel;
 
@@ -172,7 +172,7 @@ namespace MinecraftCL
 
             // Set selected profile to the one last used
             int index = -1;
-            foreach (profileSelection profileSelectBoxItem in ViewModel.profileCollection)
+            foreach (CLProfile profileSelectBoxItem in ViewModel.profileCollection)
             {
                 index++;
                 if (profileSelectBoxItem.Name == savedLastUsedProfile)
@@ -187,7 +187,7 @@ namespace MinecraftCL
         public void Button_Click(object sender, RoutedEventArgs e)
         {
             // Begin starting the game
-            DebugConsole.Print("Starting minecraft version " + ((profileSelection)profileSelectBox.SelectedValue).MojangVersion + ".", "MainWindow");
+            DebugConsole.Print("Starting minecraft version " + ((CLProfile)profileSelectBox.SelectedValue).MojangVersion + ".", "MainWindow");
 
             ControlsGrid.IsEnabled = false;
             LaunchGame.MinecraftStartedEvent += LaunchGame_MinecraftStartedEvent;
@@ -197,13 +197,13 @@ namespace MinecraftCL
                 Username = usernameBox.Text,
                 Password = passwordBox.Password,
 
-                LastUsedProfile = ((profileSelection)profileSelectBox.SelectedItem).ToString(),
-                JavaArguments = ((profileSelection)profileSelectBox.SelectedValue).javaArguments,
-                Version = ((profileSelection)profileSelectBox.SelectedValue).MojangVersion,
+                LastUsedProfile = ((CLProfile)profileSelectBox.SelectedItem).ToString(),
+                JavaArguments = ((CLProfile)profileSelectBox.SelectedValue).javaArguments,
+                Version = ((CLProfile)profileSelectBox.SelectedValue).MojangVersion,
                 AutoBackupWorld = autoBackupWorlds
             };
 
-            LaunchGameReturn launchReturn = LaunchGame.DownloadAndStartGame(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
+            LaunchGameReturn launchReturn = LaunchGame.DownloadAndStartGame(((CLProfile)(profileSelectBox.SelectedValue)), sGV);
 
             if (launchReturn.returnType == LaunchReturnType.SuccessfulLaunch)
             {
@@ -217,7 +217,7 @@ namespace MinecraftCL
             }
             else
             {
-                ErrorWindow errorWindow = new ErrorWindow(((profileSelection)(profileSelectBox.SelectedValue)), sGV);
+                ErrorWindow errorWindow = new ErrorWindow(((CLProfile)(profileSelectBox.SelectedValue)), sGV);
                 errorWindow.errorMessageBox.Text = launchReturn.returnInfo;
                 switch (launchReturn.returnType)
                 {
@@ -252,6 +252,8 @@ namespace MinecraftCL
             this.Hide();
             this.ShowInTaskbar = false;
             this.WindowState = System.Windows.WindowState.Minimized;
+
+            DebugConsole.Print("Hid MainWindow due to Minecraft starting.", "LaunchGame_MinecraftStartedEvent()");
         }
 
         private void settingsButton_Click(object sender, RoutedEventArgs e)
@@ -281,7 +283,7 @@ namespace MinecraftCL
 
         private void profileSelectBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (((profileSelection)profileSelectBox.SelectedValue).useCustomMinecraftDirectory == false)
+            if (((CLProfile)profileSelectBox.SelectedValue).useCustomMinecraftDirectory == false)
             {
                 // If there is no custom directory specified for the current profile, set it to the current directory
                 mcInstallDir = System.Environment.CurrentDirectory;
@@ -289,7 +291,7 @@ namespace MinecraftCL
             else
             {
                 // Otherwise, use the one specified
-                mcInstallDir = ((profileSelection)profileSelectBox.SelectedValue).customMinecraftDirectory;
+                mcInstallDir = ((CLProfile)profileSelectBox.SelectedValue).customMinecraftDirectory;
             }
         }
     }

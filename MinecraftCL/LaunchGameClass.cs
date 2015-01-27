@@ -148,7 +148,7 @@ namespace MinecraftCL
         /// <param name="profile">The profile to be launched</param>
         /// <param name="sGV">Start Game Variables</param>
         /// <returns></returns>
-        public static LaunchGameReturn DownloadAndStartGame(profileSelection profile, startGameVariables sGV)
+        public static LaunchGameReturn DownloadAndStartGame(CLProfile profile, startGameVariables sGV)
         {
             downloadVariables downloadVar = new downloadVariables
             {
@@ -339,7 +339,7 @@ namespace MinecraftCL
         /// <param name="profile"></param>
         /// <param name="sGV"></param>
         /// <returns></returns>
-        private static LaunchGameReturn StartGame(profileSelection profile, startGameVariables sGV)
+        private static LaunchGameReturn StartGame(CLProfile profile, startGameVariables sGV)
         {
             #region Save Settings (Username, Password, Last used profile)
             XmlDocument xDoc = new XmlDocument();

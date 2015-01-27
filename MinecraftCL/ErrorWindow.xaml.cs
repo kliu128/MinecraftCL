@@ -23,8 +23,8 @@ namespace MinecraftCL
     public partial class ErrorWindow : Window
     {
         startGameVariables sGameVariables;
-        profileSelection usedProfile;
-        public ErrorWindow(profileSelection profile, startGameVariables sGV)
+        CLProfile usedProfile;
+        public ErrorWindow(CLProfile profile, startGameVariables sGV)
         {
             InitializeComponent();
             this.Activate();

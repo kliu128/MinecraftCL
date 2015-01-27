@@ -25,8 +25,8 @@ namespace MinecraftCL
         }
 
         // Observable Collection for Profiles, using an ObservableCollecion so the comboBox updates automatically
-        private ObservableCollection<profileSelection> _profileCollection;
-        public ObservableCollection<profileSelection> profileCollection
+        private ObservableCollection<CLProfile> _profileCollection;
+        public ObservableCollection<CLProfile> profileCollection
         {
             get
             {
@@ -39,8 +39,8 @@ namespace MinecraftCL
            }
         }
 
-        private profileSelection _SelectedProfile;
-        public profileSelection SelectedProfile
+        private CLProfile _SelectedProfile;
+        public CLProfile SelectedProfile
         {
                 
             get
@@ -137,7 +137,7 @@ namespace MinecraftCL
 
         public WindowViewModel()
         {
-            profileCollection = new ObservableCollection<profileSelection>();
+            profileCollection = new ObservableCollection<CLProfile>();
         }
 
         // Raised when a property in the class has a new value

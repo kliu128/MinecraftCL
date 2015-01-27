@@ -232,7 +232,7 @@ namespace MinecraftLaunchLibrary
             string javaInstallPath;
 
             string environmentPath = Environment.GetEnvironmentVariable("JAVA_HOME");
-            if (!string.IsNullOrEmpty(environmentPath))
+            if (!string.IsNullOrEmpty(environmentPath) && Directory.Exists(environmentPath))
             {
                 javaInstallPath = environmentPath;
             }

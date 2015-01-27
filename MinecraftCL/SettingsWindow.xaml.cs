@@ -60,11 +60,11 @@ namespace MinecraftCL
 
         public void updateVersionBox()
         {
-            if (profileSelectBox.SelectedValue != null && ((profileSelection)profileSelectBox.SelectedValue).showOldVersions == true)
+            if (profileSelectBox.SelectedValue != null && ((CLProfile)profileSelectBox.SelectedValue).showOldVersions == true)
             {
                 viewOldVersions = true;
             }
-            if (profileSelectBox.SelectedValue != null && ((profileSelection)profileSelectBox.SelectedValue).showSnapshots == true)
+            if (profileSelectBox.SelectedValue != null && ((CLProfile)profileSelectBox.SelectedValue).showSnapshots == true)
             {
                 viewSnapshots = true;
             }
@@ -193,7 +193,7 @@ namespace MinecraftCL
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
             // Save profiles via serialization
-            XmlDAL.SerializeXml<ObservableCollection<profileSelection>>(ViewModel.profileCollection, "ProfileInformation.xml");
+            XmlDAL.SerializeXml<ObservableCollection<CLProfile>>(ViewModel.profileCollection, "ProfileInformation.xml");
 
             // Save modpack list changes
             XmlDAL.SerializeXml<ObservableCollection<Modpack>>(modpackList, "ModpackInformation.xml");
@@ -329,7 +329,7 @@ namespace MinecraftCL
         private void profileSelectBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (profileSelectBox.SelectedValue != null)
-                if (((profileSelection)profileSelectBox.SelectedValue).showOldVersions != viewOldVersions || ((profileSelection)profileSelectBox.SelectedValue).showSnapshots != viewSnapshots)
+                if (((CLProfile)profileSelectBox.SelectedValue).showOldVersions != viewOldVersions || ((CLProfile)profileSelectBox.SelectedValue).showSnapshots != viewSnapshots)
                     updateVersionBox();
 
             ((System.Windows.Controls.ComboBox)versionSelectBox).GetBindingExpression(System.Windows.Controls.ComboBox.SelectedValueProperty)
@@ -338,7 +338,7 @@ namespace MinecraftCL
 
         private void createNewProfileButton_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.profileCollection.Add(new profileSelection
+            ViewModel.profileCollection.Add(new CLProfile
             {
                 Name = "New Profile",
                 MojangVersion = "latest-release",
@@ -355,7 +355,7 @@ namespace MinecraftCL
             ViewModel.profileCollection.BubbleSort();
 
             // Set the new profile to be the selected one
-            foreach (profileSelection profile in profileSelectBox.ItemsSource)
+            foreach (CLProfile profile in profileSelectBox.ItemsSource)
             {
                 if (profile.Name == "New Profile")
                 {
@@ -366,7 +366,7 @@ namespace MinecraftCL
 
         private void removeProfileButton_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.profileCollection.Remove(((profileSelection)profileSelectBox.SelectedValue));
+            ViewModel.profileCollection.Remove(((CLProfile)profileSelectBox.SelectedValue));
             profileSelectBox.SelectedIndex = 0;
             ViewModel.profileCollection.BubbleSort();
         }
