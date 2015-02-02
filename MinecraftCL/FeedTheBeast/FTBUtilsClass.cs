@@ -38,7 +38,7 @@ namespace MinecraftCL.FeedTheBeast
             }
         }
 
-        public static bool DownloadRepoFile(string file)
+        public static bool DownloadRepoFile(string file, string location)
         {
             // Usable repos:
             // ftb.cursecdn.com/FTB2/static/...
