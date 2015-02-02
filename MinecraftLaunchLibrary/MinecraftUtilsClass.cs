@@ -371,15 +371,13 @@ namespace MinecraftLaunchLibrary
             return fileDownloaded;
         }
 
-        public static downloadGameReturn DownloadGame(string mcVersion, bool validateFiles)
+        public static downloadGameReturn DownloadGame(string mcVersion, bool validate = false)
         {
             try
             {
                 string mcAssetsVersion = "";
-                bool validate = validateFiles;
                 string mcMainClass = "";
                 string launchArguments = "";
-                string mcVersion = downloaderInfo.mcVersion;
                 
                 dynamic mcVersionList = MinecraftServerUtils.GetVersionsJson();
 
