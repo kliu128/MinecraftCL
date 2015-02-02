@@ -4,9 +4,17 @@
         Title="Settings" Height="457.95" Width="411"
         WindowStyle="ToolWindow" ResizeMode="NoResize">
 
-    <Grid Height="427" VerticalAlignment="Top">
+    <Grid Height="427" VerticalAlignment="Top" Margin="0,0,-6,0">
         <Label Content="Profile" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.536,0.504" Width="44" Height="26"/>
-        <ComboBox x:Name="profileSelectBox" IsSynchronizedWithCurrentItem="True" SelectedValue="{Binding Path=SelectedProfile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=SelectedProfile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" ItemsSource="{Binding Path=profileCollection, IsAsync=True,Mode=TwoWay}" SelectionChanged="profileSelectBox_SelectionChanged" HorizontalAlignment="Left" Margin="54,10,0,0" VerticalAlignment="Top" Width="250" Height="26"/>
+        <ComboBox x:Name="profileSelectBox"
+                  IsSynchronizedWithCurrentItem="True" 
+                  SelectedValue="{Binding Path=SelectedProfile, 
+                  Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                  SelectedItem="{Binding Path=SelectedProfile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                  DisplayMemberPath="Name" 
+                  ItemsSource="{Binding Path=profileCollection, IsAsync=True,Mode=TwoWay}"
+                  SelectionChanged="profileSelectBox_SelectionChanged" HorizontalAlignment="Left" 
+                  Margin="54,10,0,0" VerticalAlignment="Top" Width="250" Height="26"/>
         <Button x:Name="saveButton" Content="Save Changes" Click="saveButton_Click" HorizontalAlignment="Left" Margin="9,372,0,0" VerticalAlignment="Top" Width="385"/>
         <Label Content="Name:" HorizontalAlignment="Left" Margin="10,47,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="profileNameTextBox" HorizontalAlignment="Left" Height="22" Margin="60,51,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="335"
@@ -54,7 +62,9 @@
             <CheckBox x:Name="showOldVersions" IsChecked="{Binding SelectedProfile.showOldVersions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Checked="showOldVersions_Checked" Unchecked="showOldVersions_Unchecked" Content="Show older versions" HorizontalAlignment="Left" Margin="10,20,-57,0" VerticalAlignment="Top" Width="147"/>
             <Label Content="Version:" HorizontalAlignment="Left" Margin="10,35,0,0" VerticalAlignment="Top" Height="31"/>
             <ComboBox x:Name="versionSelectBox" SelectionChanged="versionSelectBox_SelectionChanged" HorizontalAlignment="Left" Margin="10,64,-94,0" 
-            	VerticalAlignment="Top" Width="184" SelectedValue="{Binding Path=SelectedProfile.MojangVersion, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
+            	IsSynchronizedWithCurrentItem="True" 
+                ItemsSource="{Binding Path=versionCollection, IsAsync=True,Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                VerticalAlignment="Top" Width="184" SelectedValue="{Binding Path=SelectedProfile.MojangVersion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             	DisplayMemberPath="DisplayName" SelectedValuePath="id" Height="26"
                   />
         </Grid>

@@ -38,10 +38,8 @@ namespace MinecraftCL
     public partial class SettingsWindow : Window
     {
         WebClient mcDownload = new WebClient();
-        List<versionClass> mcVersionList = new List<versionClass>();
         bool viewSnapshots = false;
         bool viewOldVersions = false;
-        ObservableCollection<versionClass> versionBoxCollection = new ObservableCollection<versionClass>();
         bool useCustomMCDir = false;
         string mcInstallDir = System.Environment.CurrentDirectory;
         string mcVersion = "1.7.5";
@@ -49,15 +47,15 @@ namespace MinecraftCL
         bool useCustomJavaEXE = false;
         ObservableCollection<Modpack> modpackList = new ObservableCollection<Modpack>();
 
-        public WindowViewModel ViewModel { get; set; }
+        public SettingsWindowViewModel ViewModel { get; set; }
 
-        public class versionClass
+        public struct MinecraftVersion
         {
             public string DisplayName { get; set; }
             public string id { get; set; }
             public string type { get; set; }
         }
-
+        /*
         public void updateVersionBox()
         {
             if (profileSelectBox.SelectedValue != null && ((CLProfile)profileSelectBox.SelectedValue).showOldVersions == true)
@@ -68,9 +66,11 @@ namespace MinecraftCL
             {
                 viewSnapshots = true;
             }
-            versionClass selectedItem = ((versionClass)versionSelectBox.SelectedItem);
-            versionBoxCollection.Clear();
-            foreach (versionClass version in mcVersionList)
+            MinecraftVersion selectedItem = new MinecraftVersion { };
+            if (versionSelectBox.SelectedItem != null)
+                selectedItem = ((MinecraftVersion)versionSelectBox.SelectedItem);
+            ViewModel.versionCollection.Clear();
+            foreach (MinecraftVersion version in mcVersionList)
             {
                 // 5 types of versions: snapshot, old_beta, old_alpha, local, and release.
                 // The combobox only shows snapshots or old versions if it is told
@@ -111,9 +111,9 @@ namespace MinecraftCL
             {
                 versionSelectBox.SelectedIndex = 0;
             }
-        }
+        }*/
 
-        public SettingsWindow(WindowViewModel WindowViewModel)
+        public SettingsWindow(SettingsWindowViewModel WindowViewModel)
         {
             InitializeComponent();
             ViewModel = WindowViewModel;
@@ -123,15 +123,17 @@ namespace MinecraftCL
             if (mcVersionDynamic != null) // If there is internet connectivity, add versions from Mojang servers
             {
                 // Add latest release version
-                mcVersionList.Add(new versionClass { DisplayName = "Latest Version (" + mcVersionDynamic.latest.release + ")", id = "latest-release", type = "release" });
+                ViewModel.versionCollection.Add(new MinecraftVersion { DisplayName = "Latest Version (" + mcVersionDynamic.latest.release + ")", id = "latest-release", type = "release" });
                 // Add latest snapshot version
-                mcVersionList.Add(new versionClass { DisplayName = "Latest Version (" + mcVersionDynamic.latest.snapshot + ")", id = "latest-snapshot", type = "snapshot" });
+                ViewModel.versionCollection.Add(new MinecraftVersion { DisplayName = "Latest Version (" + mcVersionDynamic.latest.snapshot + ")", id = "latest-snapshot", type = "snapshot" });
+                
                 foreach (var item in mcVersionDynamic.versions)
                 {
-                    // Add every version
-                    mcVersionList.Add(new versionClass { DisplayName = item.id, id = item.id, type = item.type });
+                    // Add all other versions
+                    ViewModel.versionCollection.Add(new MinecraftVersion { DisplayName = item.id, id = item.id, type = item.type });
                 }
             }
+
             // Add local versions
             XmlDocument xDoc = new XmlDocument();
             xDoc.Load(System.Environment.CurrentDirectory + @"\.mcl\VersionInformation.xml");
@@ -155,16 +157,16 @@ namespace MinecraftCL
                 if (versionInServer == false)
                 {
                     // Version does not exist in server (or server could not be accessed), it is a local version
-                    mcVersionList.Add(new versionClass {
+                    ViewModel.versionCollection.Add(new MinecraftVersion
+                    {
                         DisplayName = xAC["version"].Value + " (Local)",
                         id = xAC["version"].Value, 
                         type = "local" });
                 }
                 
             }
-            updateVersionBox();
+            //updateVersionBox();
 
-            versionSelectBox.ItemsSource = versionBoxCollection;
             versionSelectBox.DisplayMemberPath = "DisplayName";
             
             ViewModel.profileCollection.BubbleSort();
@@ -172,7 +174,7 @@ namespace MinecraftCL
             if (ViewModel.profileCollection[0].showOldVersions == true)
             {
                 viewOldVersions = true;
-                updateVersionBox();
+                //updateVersionBox();
             }
             ((System.Windows.Controls.ComboBox)versionSelectBox).GetBindingExpression(System.Windows.Controls.ComboBox.SelectedValueProperty)
                     .UpdateTarget();
@@ -269,25 +271,25 @@ namespace MinecraftCL
         private void showSnapshots_Checked(object sender, RoutedEventArgs e)
         {
             viewSnapshots = true;
-            updateVersionBox();
+            //updateVersionBox();
         }
 
         private void showSnapshots_Unchecked(object sender, RoutedEventArgs e)
         {
             viewSnapshots = false;
-            updateVersionBox();
+            //updateVersionBox();
         }
 
         private void showOldVersions_Checked(object sender, RoutedEventArgs e)
         {
             viewOldVersions = true;
-            updateVersionBox();
+            //updateVersionBox();
         }
 
         private void showOldVersions_Unchecked(object sender, RoutedEventArgs e)
         {
             viewOldVersions = false;
-            updateVersionBox();
+            //updateVersionBox();
         }
 
         private void browseMCFolderButton_Click(object sender, RoutedEventArgs e)
@@ -330,7 +332,7 @@ namespace MinecraftCL
         {
             if (profileSelectBox.SelectedValue != null)
                 if (((CLProfile)profileSelectBox.SelectedValue).showOldVersions != viewOldVersions || ((CLProfile)profileSelectBox.SelectedValue).showSnapshots != viewSnapshots)
-                    updateVersionBox();
+                    //updateVersionBox();
 
             ((System.Windows.Controls.ComboBox)versionSelectBox).GetBindingExpression(System.Windows.Controls.ComboBox.SelectedValueProperty)
                     .UpdateTarget();

@@ -33,7 +33,7 @@ namespace MinecraftCL
                 return Text;
             }
         }
-        public WindowViewModel ViewModel = new WindowViewModel();
+        public SettingsWindowViewModel ViewModel = new SettingsWindowViewModel();
         public MainWindow()
         {
             Globals.DebugOn = true;
@@ -207,6 +207,7 @@ namespace MinecraftCL
 
             if (launchReturn.returnType == LaunchReturnType.SuccessfulLaunch)
             {
+                DebugConsole.Print("Successful Minecraft session - closing!", "MainWindow.Button_Click()");
                 this.Close();
                 return;
             }
@@ -283,15 +284,18 @@ namespace MinecraftCL
 
         private void profileSelectBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (((CLProfile)profileSelectBox.SelectedValue).useCustomMinecraftDirectory == false)
+            if (profileSelectBox.SelectedValue != null)
             {
-                // If there is no custom directory specified for the current profile, set it to the current directory
-                mcInstallDir = System.Environment.CurrentDirectory;
-            }
-            else
-            {
-                // Otherwise, use the one specified
-                mcInstallDir = ((CLProfile)profileSelectBox.SelectedValue).customMinecraftDirectory;
+                if (((CLProfile)profileSelectBox.SelectedValue).useCustomMinecraftDirectory == false)
+                {
+                    // If there is no custom directory specified for the current profile, set it to the current directory
+                    mcInstallDir = System.Environment.CurrentDirectory;
+                }
+                else
+                {
+                    // Otherwise, use the one specified
+                    mcInstallDir = ((CLProfile)profileSelectBox.SelectedValue).customMinecraftDirectory;
+                }
             }
         }
     }
