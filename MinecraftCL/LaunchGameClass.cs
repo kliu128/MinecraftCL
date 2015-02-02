@@ -150,13 +150,8 @@ namespace MinecraftCL
         /// <returns></returns>
         public static LaunchGameReturn DownloadAndStartGame(CLProfile profile, startGameVariables sGV)
         {
-            downloadVariables downloadVar = new downloadVariables
-            {
-                mcVersion = sGV.Version,
-                ValidateFiles = false
-            };
-            string authenticationReturnString;
             // Authenticate Minecraft using sGV.Username and sGV.Password
+            string authenticationReturnString;
             bool authReturn = MinecraftUtils.authenticateMinecraft(ref sGV, out authenticationReturnString);
             if (authReturn == false)
             {
@@ -187,7 +182,7 @@ namespace MinecraftCL
                 worker.DoWork += (o, x) =>
                     {
                         // Download the game
-                        downloadReturn = MinecraftUtils.DownloadGame(downloadVar);
+                        downloadReturn = MinecraftUtils.DownloadGame(sGV.Version);
                     };
                 worker.ProgressChanged += (o, x) =>
                     {
