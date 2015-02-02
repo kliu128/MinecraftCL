@@ -71,9 +71,10 @@ namespace MinecraftCL
             {
                 viewSnapshots = true;
             }
-            MinecraftVersion selectedItem = new MinecraftVersion { };
+
+            MinecraftVersion lastSelectedItem = new MinecraftVersion { };
             if (versionSelectBox.SelectedItem != null)
-                selectedItem = ((MinecraftVersion)versionSelectBox.SelectedItem);
+                lastSelectedItem = ((MinecraftVersion)versionSelectBox.SelectedItem);
             ViewModel.versionCollection.Clear();
             foreach (MinecraftVersion version in mcVersionList)
             {
@@ -105,11 +106,13 @@ namespace MinecraftCL
                         break;
                 }
             }
-            if (versionSelectBox.Items.Contains(selectedItem))
+            // If the version box now contains the last item selected, then put it back
+            // as the selected item.
+            if (versionSelectBox.Items.Contains(lastSelectedItem))
             {
-                versionSelectBox.SelectedItem = selectedItem;
+                versionSelectBox.SelectedItem = lastSelectedItem;
             }
-            else //if (versionSelectBox.SelectedIndex != -1)
+            else if (versionSelectBox.SelectedIndex != -1)
             {
                 versionSelectBox.SelectedIndex = 0;
             }
