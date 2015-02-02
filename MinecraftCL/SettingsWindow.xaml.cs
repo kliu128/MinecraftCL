@@ -179,7 +179,7 @@ namespace MinecraftCL
             // Load modpacks from ModpackSettings.xml
             try
             {
-                modpackList = XmlDAL.DeserializeXml<ObservableCollection<Modpack>>("ModpackSettings.xml");
+                modpackList = XmlDAL.DeserializeXml<ObservableCollection<Modpack>>("ModpackInformation.xml");
             }
             catch (Exception)
             {
@@ -426,8 +426,7 @@ namespace MinecraftCL
 
         private void addModpackButton_Click(object sender, RoutedEventArgs e)
         {
-            AddModpackWindow addWindow = new AddModpackWindow();
-            addWindow.modpackList = modpackList; // Send over a reference to the modpack list, so addWindow can add a modpack to the list
+            AddModpackWindow addWindow = new AddModpackWindow(modpackList);
             addWindow.ShowDialog();
             modpackSelectBox.SelectedIndex = 0;
         }

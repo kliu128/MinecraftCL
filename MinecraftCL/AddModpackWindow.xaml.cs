@@ -22,12 +22,15 @@ namespace MinecraftCL
     /// </summary>
     public partial class AddModpackWindow : Window
     {
-        public ObservableCollection<Modpack> modpackList { get; set; }
+        private ObservableCollection<Modpack> modpackList = new ObservableCollection<Modpack>();
         bool ftbPrivatePackCodeBoxClicked = false;
 
-        public AddModpackWindow()
+        public AddModpackWindow(ObservableCollection<Modpack> _modpackList)
         {
             InitializeComponent();
+
+            modpackList = _modpackList;
+
             ftbPublicPackCombobox.ItemsSource = FTBLocations.PublicModpacks;
             ftbPublicPackCombobox.SelectedIndex = 0;
         }
