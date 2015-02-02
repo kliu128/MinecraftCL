@@ -123,7 +123,7 @@ namespace MinecraftCL
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += (o, x) =>
                 {
-                    FTBLocations.DownloadServersInitialized = FTBUtils.InitializeDLServers();
+                    FTBLocations.DownloadServersInitialized = FTBServerUtils.InitializeDLServers();
                     Exception getModpackResult;
                     FTBLocations.PublicModpacks = FTBUtils.GetModpacks(out getModpackResult);
                 };

@@ -125,6 +125,7 @@
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="FeedTheBeast\FTBServerUtils.cs" />
     <Compile Include="FeedTheBeast\FTBUtilsClass.cs" />
     <Compile Include="FeedTheBeast\FTBLocations.cs" />
     <Compile Include="FeedTheBeast\FTBModpackClass.cs" />
