@@ -1,34 +1,15 @@
-﻿using System;
+﻿using MinecraftLaunchLibrary;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.ObjectModel;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using Ionic.Zip;
-using System.Configuration;
-using System.Web.Script.Serialization;
-using Newtonsoft.Json;
-using System.IO;
-using System.Net;
-using System.Runtime.Serialization;
-using System.Xml;
-using System.Xml.Linq;
 using System.Windows.Forms;
-using MinecraftCL;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Threading;
-using System.Xml.Serialization;
-using MinecraftLaunchLibrary;
-using System.Timers;
+using System.Windows.Media;
 using System.Windows.Threading;
+using System.Xml;
 
 namespace MinecraftCL
 {
@@ -346,11 +327,19 @@ namespace MinecraftCL
 
         private void profileSelectBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Insane. Do not touch
             if (profileSelectBox.SelectedValue != null)
                 if (((CLProfile)profileSelectBox.SelectedValue).showOldVersions != viewOldVersions || ((CLProfile)profileSelectBox.SelectedValue).showSnapshots != viewSnapshots)
                     updateVersionBox();
 
+            // Force update versionSelectBox, vanillaVersion, modpackVersion
             ((System.Windows.Controls.ComboBox)versionSelectBox).GetBindingExpression(System.Windows.Controls.ComboBox.SelectedValueProperty)
+                    .UpdateTarget();
+
+            ((System.Windows.Controls.RadioButton)useVanillaVersionCheckbox).GetBindingExpression(System.Windows.Controls.RadioButton.IsCheckedProperty)
+                    .UpdateTarget();
+
+            ((System.Windows.Controls.RadioButton)useModpackCheckbox).GetBindingExpression(System.Windows.Controls.RadioButton.IsCheckedProperty)
                     .UpdateTarget();
         }
 
