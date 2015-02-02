@@ -44,12 +44,6 @@ namespace MinecraftLaunchLibrary
         public Int64 Size { get; set; }
     }
 
-    public struct downloadVariables
-    {
-        public string mcVersion;
-        public bool ValidateFiles;
-    }
-
     public class startGameVariables
     {
         public string Version { get; set; }
@@ -377,12 +371,12 @@ namespace MinecraftLaunchLibrary
             return fileDownloaded;
         }
 
-        public static downloadGameReturn DownloadGame(downloadVariables downloaderInfo)
+        public static downloadGameReturn DownloadGame(string mcVersion, bool validateFiles)
         {
             try
             {
                 string mcAssetsVersion = "";
-                bool validateFiles = downloaderInfo.ValidateFiles;
+                bool validate = validateFiles;
                 string mcMainClass = "";
                 string launchArguments = "";
                 string mcVersion = downloaderInfo.mcVersion;
@@ -410,7 +404,7 @@ namespace MinecraftLaunchLibrary
                 {
                     // Try to download *version*.json, with detailed information on how to run that version of minecraft
                     downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/" + mcVersion + "/" + mcVersion + ".json",
-                        System.Environment.CurrentDirectory + "\\.mcl\\versions\\" + mcVersion + ".json", validateFiles,
+                        System.Environment.CurrentDirectory + "\\.mcl\\versions\\" + mcVersion + ".json", validate,
                         new DownloadUpdateEventArgs
                         {
                             CurrentFile = mcVersion + ".json",
@@ -460,7 +454,7 @@ namespace MinecraftLaunchLibrary
                 foreach (var library in checkMcLibraries)
                 {
                     string libraryLocation;
-                    bool libraryDownloaded = DownloadLibrary(library, Environment.CurrentDirectory, validateFiles, mcVersion, out libraryLocation);
+                    bool libraryDownloaded = DownloadLibrary(library, Environment.CurrentDirectory, validate, mcVersion, out libraryLocation);
                     if (libraryDownloaded == true)
                     {
                         string currentDownloadType = "";
@@ -480,7 +474,7 @@ namespace MinecraftLaunchLibrary
                 // Download minecraft jar
                 downloadFile("http://s3.amazonaws.com/Minecraft.Download/versions/" + mcVersion + "/" + mcVersion + ".jar",
                     Environment.CurrentDirectory + @"\.minecraft\versions\" + mcVersion + @"\" + mcVersion + ".jar",
-                    validateFiles,
+                    validate,
                     new DownloadUpdateEventArgs
                     {
                         CurrentFile = mcVersion + ".jar",
@@ -497,7 +491,7 @@ namespace MinecraftLaunchLibrary
                 // Download assets information, *assetversion*.json
                 downloadFile("https://s3.amazonaws.com/Minecraft.Download/indexes/" + mcAssetsVersion + ".json",
                     Environment.CurrentDirectory + @"\.minecraft\assets\indexes\" + mcAssetsVersion + ".json",
-                    validateFiles,
+                    validate,
                     new DownloadUpdateEventArgs
                     {
                         CurrentFile = mcAssetsVersion + ".json",
@@ -522,7 +516,7 @@ namespace MinecraftLaunchLibrary
                         Size = Convert.ToInt64((string)dynamicAsset.Value.size) 
                     };
 
-                    DownloadAsset(asset, Environment.CurrentDirectory, validateFiles, mcVersion, mcAssetsVersion);
+                    DownloadAsset(asset, Environment.CurrentDirectory, validate, mcVersion, mcAssetsVersion);
                 }
 
                 // Trigger event for download completion
