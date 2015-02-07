@@ -47,7 +47,7 @@ namespace MinecraftCL
 
                 if (stopDownloadResult == MessageBoxResult.Yes)
                 {
-                    Application.Current.Shutdown(0);
+                    Environment.Exit(0);
                 }
                 else
                 {

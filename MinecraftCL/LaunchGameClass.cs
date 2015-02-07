@@ -203,7 +203,7 @@ namespace MinecraftCL
 
                 // Start the download thread, and show the download dialog.
                 worker.RunWorkerAsync();
-                downloadDialog.ShowDialog();
+                downloadDialog.Show();
 
                 // This will wait until the download has completed.
                 reset.WaitOne();
