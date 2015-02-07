@@ -190,20 +190,20 @@ namespace MinecraftCL
             DebugConsole.Print("Starting minecraft version " + ((CLProfile)profileSelectBox.SelectedValue).MojangVersion + ".", "MainWindow");
 
             ControlsGrid.IsEnabled = false;
+
             LaunchGame.MinecraftStartedEvent += LaunchGame_MinecraftStartedEvent;
+            CLProfile currentProfile = ((CLProfile)profileSelectBox.SelectedValue);
 
             startGameVariables sGV = new startGameVariables
             {
                 Username = usernameBox.Text,
                 Password = passwordBox.Password,
 
-                LastUsedProfile = ((CLProfile)profileSelectBox.SelectedItem).ToString(),
-                JavaArguments = ((CLProfile)profileSelectBox.SelectedValue).javaArguments,
-                Version = ((CLProfile)profileSelectBox.SelectedValue).MojangVersion,
-                AutoBackupWorld = autoBackupWorlds
+                Version = currentProfile.MojangVersion,
+                JavaArguments = currentProfile.javaArguments,
             };
 
-            LaunchGameReturn launchReturn = LaunchGame.DownloadAndStartGame(((CLProfile)(profileSelectBox.SelectedValue)), sGV);
+            LaunchGameReturn launchReturn = LaunchGame.DownloadAndStartGame(currentProfile, sGV, autoBackupWorlds, ((CLProfile)profileSelectBox.SelectedItem).ToString());
 
             if (launchReturn.returnType == LaunchReturnType.SuccessfulLaunch)
             {

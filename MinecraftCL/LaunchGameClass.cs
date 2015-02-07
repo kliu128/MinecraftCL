@@ -148,7 +148,7 @@ namespace MinecraftCL
         /// <param name="profile">The profile to be launched</param>
         /// <param name="sGV">Start Game Variables</param>
         /// <returns></returns>
-        public static LaunchGameReturn DownloadAndStartGame(CLProfile profile, startGameVariables sGV)
+        public static LaunchGameReturn DownloadAndStartGame(CLProfile profile, startGameVariables sGV, bool backupWorlds, string lastUsedProfile)
         {
             // Authenticate Minecraft using sGV.Username and sGV.Password
             string authenticationReturnString;
@@ -158,8 +158,28 @@ namespace MinecraftCL
                 // authentication failed
                 return new LaunchGameReturn { returnInfo = authenticationReturnString, returnType = LaunchReturnType.AuthenticationError };
             }
-            
-            bool mcVersionExists = checkMinecraftExists(sGV.Version);
+
+            // Get Minecraft version specified
+            string mcVersion = null;
+            switch (profile.ModpackInfo.Type)
+            {
+                case ModpackType.MojangVanilla:
+                    mcVersion = sGV.Version;
+                    break;
+                case ModpackType.TechnicPack:
+                    break;
+                case ModpackType.FeedTheBeastPublic:
+                    break;
+                case ModpackType.FeedTheBeastPrivate:
+                    break;
+                case ModpackType.MinecraftCL:
+                    break;
+                case ModpackType.PlaceholderModpack:
+                    break;
+                default:
+                    break;
+            }
+            bool mcVersionExists = checkMinecraftExists(mcVersion);
 
             if (!mcVersionExists)
             {
@@ -199,7 +219,7 @@ namespace MinecraftCL
                             SaveVersionInformation(downloadReturn);
 
                             // Start the game
-                            gameReturn = StartGame(profile, sGV);
+                            gameReturn = StartGame(profile, sGV, lastUsedProfile);
                         }
                         else
                             downloadError = true;
@@ -225,7 +245,7 @@ namespace MinecraftCL
             {
                 // The version already exists, launch game
                 #region Backup Minecraft worlds if specified
-                if (sGV.AutoBackupWorld == true && Directory.Exists(sGV.MinecraftDirectory + @"\saves\"))
+                if (backupWorlds == true && Directory.Exists(sGV.MinecraftDirectory + @"\saves\"))
                 {
                     MessageWindow backupNotificationBox = new MessageWindow();
                     backupNotificationBox.messageText.Text = "Backing up worlds before starting Minecraft...";
@@ -240,7 +260,7 @@ namespace MinecraftCL
                 }
                 #endregion
 
-                LaunchGameReturn gameReturn = StartGame(profile, sGV);
+                LaunchGameReturn gameReturn = StartGame(profile, sGV, lastUsedProfile);
                 return gameReturn;
             }
         }
@@ -334,7 +354,7 @@ namespace MinecraftCL
         /// <param name="profile"></param>
         /// <param name="sGV"></param>
         /// <returns></returns>
-        private static LaunchGameReturn StartGame(CLProfile profile, startGameVariables sGV)
+        private static LaunchGameReturn StartGame(CLProfile profile, startGameVariables sGV, string lastUsedProfile)
         {
             #region Save Settings (Username, Password, Last used profile)
             XmlDocument xDoc = new XmlDocument();
@@ -364,11 +384,11 @@ namespace MinecraftCL
             if (xDoc.SelectSingleNode("/settings/LastUsedProfile") == null)
             {
                 XmlElement lastUsedProfileElement = xDoc.CreateElement("LastUsedProfile");
-                lastUsedProfileElement.InnerText = sGV.LastUsedProfile;
+                lastUsedProfileElement.InnerText = lastUsedProfile;
                 xDocRoot.AppendChild(lastUsedProfileElement);
             }
             else
-                xDoc.SelectSingleNode("/settings/LastUsedProfile").InnerText = sGV.LastUsedProfile;
+                xDoc.SelectSingleNode("/settings/LastUsedProfile").InnerText = lastUsedProfile;
 
             xDoc.Save(System.Environment.CurrentDirectory + "//.mcl//MinecraftCLSettings.xml");
             #endregion

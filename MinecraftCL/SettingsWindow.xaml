@@ -83,7 +83,7 @@
             <Button x:Name="addModpackButton" Click="addModpackButton_Click" Content="Add Modpack" HorizontalAlignment="Left" Margin="10,104,0,0" VerticalAlignment="Top" Width="81"/>
             <Button x:Name="removeModpackButton" Click="removeModpackButton_Click" Content="Remove Modpack" HorizontalAlignment="Left" Margin="96,104,-3,0" VerticalAlignment="Top" Width="102"/>
         </Grid>
-        <RadioButton x:Name="useVanillaVersionCheckbox" GroupName="MinecraftVersionGroup" IsChecked="{Binding Path=useMojangVersion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Use vanilla Minecraft versions" HorizontalAlignment="Left" Margin="10,87,0,0" VerticalAlignment="Top" Width="184"/>
+        <RadioButton x:Name="useVanillaVersionCheckbox" Checked="useVanillaVersionCheckbox_Checked" GroupName="MinecraftVersionGroup" IsChecked="{Binding Path=useMojangVersion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Use vanilla Minecraft versions" HorizontalAlignment="Left" Margin="10,87,0,0" VerticalAlignment="Top" Width="184"/>
         <RadioButton x:Name="useModpackCheckbox" Checked="useModpackCheckbox_Checked" GroupName="MinecraftVersionGroup" IsChecked="{Binding Path=useModpackVersion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Use a custom modpack" HorizontalAlignment="Left" Margin="205,87,0,0" VerticalAlignment="Top" Width="184"/>
         <CheckBox x:Name="enableAnalyticsCheckbox" Content="Enable analytics (literally just timings, no personal info)" IsChecked="{Binding Path=enableAnalytics, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="10,352,0,0" VerticalAlignment="Top"/>
 

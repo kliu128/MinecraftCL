@@ -436,6 +436,14 @@ namespace MinecraftCL
             // If a modpack is not selected, select one
             if (modpackSelectBox.SelectedIndex == -1)
                 modpackSelectBox.SelectedIndex = 0;
+
+            ViewModel.SelectedProfile.ModpackInfo.Type = ((Modpack)modpackSelectBox.SelectedValue).Type;
+            ViewModel.SelectedProfile.ModpackInfo.ID = ((Modpack)modpackSelectBox.SelectedValue).name;
+        }
+
+        private void useVanillaVersionCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SelectedProfile.ModpackInfo.Type = ModpackType.MojangVanilla;
         }
     }
 }
