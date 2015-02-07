@@ -75,7 +75,6 @@ namespace MinecraftCL
                     new CLProfile
                     {
                         Name = "Latest Version",
-                        VersionType = MinecraftCL.VersionType.Mojang,
                         MojangVersion = "latest-release",
 
                         useCustomMinecraftDirectory = false,

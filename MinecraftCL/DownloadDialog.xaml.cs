@@ -20,6 +20,7 @@ namespace MinecraftCL
     public partial class DownloadDialog : Window
     {
         public bool downloadIsInProgress { get; set; }
+
         public string downloadUpdateInfo
         { 
             get { return downloadFileDisplay.Text; }

@@ -177,7 +177,6 @@ namespace MinecraftCL
                     };
                 MinecraftUtils.DownloadUpdateEvent += downloadUpdateDelegate;
 
-                bool downloadError = false;
                 AutoResetEvent reset = new AutoResetEvent(false);
 
                 worker.DoWork += (o, x) =>
@@ -199,12 +198,13 @@ namespace MinecraftCL
                 worker.RunWorkerAsync();
                 downloadDialog.ShowDialog();
 
-                // This will wait until either the game has started and ended, or until a download error occurs.
+                // This will wait until the download has completed.
                 reset.WaitOne();
 
                 MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
                 downloadDialog.downloadIsInProgress = false;
                 downloadDialog.Close();
+
                 if (downloadReturn.ReturnValue == "success")
                 {
                     SaveVersionInformation(downloadReturn);
@@ -218,7 +218,6 @@ namespace MinecraftCL
                 else
                     // If there was a download error, forward it to the caller.
                     return new LaunchGameReturn { returnType = LaunchReturnType.DownloadError, returnInfo = downloadReturn.ReturnValue };
-                    
             }
             else
             {
