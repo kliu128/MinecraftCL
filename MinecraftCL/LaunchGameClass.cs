@@ -159,27 +159,8 @@ namespace MinecraftCL
                 return new LaunchGameReturn { returnInfo = authenticationReturnString, returnType = LaunchReturnType.AuthenticationError };
             }
 
-            // Get Minecraft version specified
-            string mcVersion = null;
-            switch (profile.ModpackInfo.Type)
-            {
-                case ModpackType.MojangVanilla:
-                    mcVersion = sGV.Version;
-                    break;
-                case ModpackType.TechnicPack:
-                    break;
-                case ModpackType.FeedTheBeastPublic:
-                    break;
-                case ModpackType.FeedTheBeastPrivate:
-                    break;
-                case ModpackType.MinecraftCL:
-                    break;
-                case ModpackType.PlaceholderModpack:
-                    break;
-                default:
-                    break;
-            }
-            bool mcVersionExists = checkMinecraftExists(mcVersion);
+            // See if the vanilla version of Minecraft exists that is required
+            bool mcVersionExists = checkMinecraftExists(sGV.Version);
 
             if (!mcVersionExists)
             {
@@ -211,19 +192,6 @@ namespace MinecraftCL
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {
-                        MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
-                        downloadDialog.downloadIsInProgress = false;
-                        downloadDialog.Close();
-                        if (downloadReturn.ReturnValue == "success")
-                        {
-                            SaveVersionInformation(downloadReturn);
-
-                            // Start the game
-                            gameReturn = StartGame(profile, sGV, lastUsedProfile);
-                        }
-                        else
-                            downloadError = true;
-
                         reset.Set();
                     };
 
@@ -234,12 +202,23 @@ namespace MinecraftCL
                 // This will wait until either the game has started and ended, or until a download error occurs.
                 reset.WaitOne();
 
-                if (downloadError == true)
+                MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
+                downloadDialog.downloadIsInProgress = false;
+                downloadDialog.Close();
+                if (downloadReturn.ReturnValue == "success")
+                {
+                    SaveVersionInformation(downloadReturn);
+
+                    // Start the game
+                    gameReturn = StartGame(profile, sGV, lastUsedProfile);
+
+                    // Return the LaunchGameReturn provided by StartGame();
+                    return (LaunchGameReturn)gameReturn;
+                }
+                else
                     // If there was a download error, forward it to the caller.
                     return new LaunchGameReturn { returnType = LaunchReturnType.DownloadError, returnInfo = downloadReturn.ReturnValue };
-                else
-                    // Otherwise return the LaunchGameReturn provided by StartGame();
-                    return (LaunchGameReturn)gameReturn;
+                    
             }
             else
             {

@@ -439,11 +439,13 @@ namespace MinecraftCL
 
             ViewModel.SelectedProfile.ModpackInfo.Type = ((Modpack)modpackSelectBox.SelectedValue).Type;
             ViewModel.SelectedProfile.ModpackInfo.ID = ((Modpack)modpackSelectBox.SelectedValue).name;
+            ViewModel.SelectedProfile.MojangVersion = ((Modpack)modpackSelectBox.SelectedValue).mcVersion;
         }
 
         private void useVanillaVersionCheckbox_Checked(object sender, RoutedEventArgs e)
         {
             ViewModel.SelectedProfile.ModpackInfo.Type = ModpackType.MojangVanilla;
+            ViewModel.SelectedProfile.MojangVersion = ((string)versionSelectBox.SelectedValue);
         }
     }
 }
