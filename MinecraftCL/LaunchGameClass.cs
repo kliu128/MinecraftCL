@@ -102,7 +102,7 @@ namespace MinecraftCL
             {
                 // System is not connected to the internet/mojang servers and user is trying to launch a
                 // "latest-*****" version, return error.
-                errorInformation = "Cannot find the latest version when there is no internet connection.";
+                errorInformation = "Could not locate latest version - are you connected to the internet?";
                 return false;
             }
 
@@ -160,7 +160,14 @@ namespace MinecraftCL
             }
 
             // See if the vanilla version of Minecraft exists that is required
-            bool mcVersionExists = checkMinecraftExists(sGV.Version);
+            string error;
+            bool mcVersionExists = getVersionInformation(ref sGV, out error);
+            if (error != "")
+                return new LaunchGameReturn
+                { 
+                    returnType = LaunchReturnType.VersionInformationError, 
+                    returnInfo = error 
+                };
 
             if (!mcVersionExists)
             {
