@@ -444,7 +444,6 @@ namespace MinecraftLaunchLibrary
                 var checkMcLibraries = new JavaScriptSerializer().Deserialize<IEnumerable<Library>>(mcLibraryValues);
                 // Downloads libraries if they are not present
                 List<string> downloadedLibraryLocations = new List<string>();
-                List<downloadLibraryClass> mcDownloadLibraries = new List<downloadLibraryClass>();
 
                 foreach (var library in checkMcLibraries)
                 {
@@ -765,16 +764,7 @@ namespace MinecraftLaunchLibrary
         }
     }
 
-    #region Information to Download Library Class
-    public class downloadLibraryClass
-    {
-        public string Name { get; set; }
-        public string DownloadType { get; set; }
-        public bool ExtractNative { get; set; }
-    }
-    #endregion
-
-    #region JSON Classes
+    #region Library Json Classes
     public class Os
     {
         public string name { get; set; }
