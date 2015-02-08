@@ -174,7 +174,6 @@ namespace MinecraftCL
                 // Version does not exist, begin setting up the download
                 downloadGameReturn downloadReturn = new downloadGameReturn();
                 DownloadDialog downloadDialog = new DownloadDialog();
-                LaunchGameReturn? gameReturn = null;
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
 
@@ -184,7 +183,6 @@ namespace MinecraftCL
                     };
                 MinecraftUtils.DownloadUpdateEvent += downloadUpdateDelegate;
 
-                AutoResetEvent reset = new AutoResetEvent(false);
                 bool downloadError = false;
 
                 worker.DoWork += (o, x) =>
@@ -199,61 +197,47 @@ namespace MinecraftCL
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {
-                        MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
-                        downloadDialog.downloadIsInProgress = false;
-                        downloadDialog.Close();
-
                         if (downloadReturn.ReturnValue == "success")
                             downloadError = false;
                         else
                             downloadError = true;
 
-                        // Start the game
-                        gameReturn = StartGame(profile, sGV, lastUsedProfile);
-                        reset.Set();
+                        MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
+                        downloadDialog.downloadIsInProgress = false;
+                        downloadDialog.Close();
                     };
 
                 // Start the download thread, and show the download dialog.
-                // ShowDialog will wait until the download is complete.
+                // ShowDialog will wait until the download is complete and the dialog
+                // has closed.
                 worker.RunWorkerAsync();
                 downloadDialog.ShowDialog();
 
-                // The AutoResetEvent will wait until startGame is complete.
-                reset.WaitOne();
-
-                if (!downloadError)
-                {
-                    SaveVersionInformation(downloadReturn);
-
-                    // Return the LaunchGameReturn provided by StartGame();
-                    return (LaunchGameReturn)gameReturn;
-                }
-                else
+                if (downloadError)
                     // If there was a download error, forward it to the caller.
                     return new LaunchGameReturn { returnType = LaunchReturnType.DownloadError, returnInfo = downloadReturn.ReturnValue };
+
+                SaveVersionInformation(downloadReturn);
             }
-            else
+            
+            // The version already exists, launch game
+            #region Backup Minecraft worlds if specified
+            if (backupWorlds == true && Directory.Exists(sGV.MinecraftDirectory + @"\saves\"))
             {
-                // The version already exists, launch game
-                #region Backup Minecraft worlds if specified
-                if (backupWorlds == true && Directory.Exists(sGV.MinecraftDirectory + @"\saves\"))
-                {
-                    MessageWindow backupNotificationBox = new MessageWindow();
-                    backupNotificationBox.messageText.Text = "Backing up worlds before starting Minecraft...";
-                    backupNotificationBox.closeTimeoutMilliseconds = -1;
-                    backupNotificationBox.Show();
-                    backupNotificationBox.Activate();
+                MessageWindow backupNotificationBox = new MessageWindow();
+                backupNotificationBox.messageText.Text = "Backing up worlds before starting Minecraft...";
+                backupNotificationBox.closeTimeoutMilliseconds = -1;
+                backupNotificationBox.Show();
+                backupNotificationBox.Activate();
 
-                    string currentDateTime = DateTime.Now.Hour + "." + DateTime.Now.Minute + "." + DateTime.Now.Millisecond + " - " + DateTime.Now.ToString("MMMM") + " " + DateTime.Now.Day + ", " + DateTime.Now.Year;
-                    DirectoryCopy.CopyRecursive(sGV.MinecraftDirectory + @"\.minecraft\saves\", sGV.MinecraftDirectory + "\\Backups\\" + currentDateTime + "\\");
+                string currentDateTime = DateTime.Now.Hour + "." + DateTime.Now.Minute + "." + DateTime.Now.Millisecond + " - " + DateTime.Now.ToString("MMMM") + " " + DateTime.Now.Day + ", " + DateTime.Now.Year;
+                DirectoryCopy.CopyRecursive(sGV.MinecraftDirectory + @"\.minecraft\saves\", sGV.MinecraftDirectory + "\\Backups\\" + currentDateTime + "\\");
 
-                    backupNotificationBox.Close();
-                }
-                #endregion
-
-                LaunchGameReturn gameReturn = StartGame(profile, sGV, lastUsedProfile);
-                return gameReturn;
+                backupNotificationBox.Close();
             }
+            #endregion
+
+            return StartGame(profile, sGV, lastUsedProfile);
         }
 
         private static void SaveVersionInformation(downloadGameReturn info)
