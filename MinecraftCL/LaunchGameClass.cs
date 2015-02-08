@@ -185,6 +185,7 @@ namespace MinecraftCL
                 MinecraftUtils.DownloadUpdateEvent += downloadUpdateDelegate;
 
                 AutoResetEvent reset = new AutoResetEvent(false);
+                bool downloadError = false;
 
                 worker.DoWork += (o, x) =>
                     {
@@ -198,26 +199,31 @@ namespace MinecraftCL
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {
+                        MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
+                        downloadDialog.downloadIsInProgress = false;
+                        downloadDialog.Close();
+
+                        if (downloadReturn.ReturnValue == "success")
+                            downloadError = false;
+                        else
+                            downloadError = true;
+
+                        // Start the game
+                        gameReturn = StartGame(profile, sGV, lastUsedProfile);
                         reset.Set();
                     };
 
                 // Start the download thread, and show the download dialog.
+                // ShowDialog will wait until the download is complete.
                 worker.RunWorkerAsync();
-                downloadDialog.Show();
+                downloadDialog.ShowDialog();
 
-                // This will wait until the download has completed.
+                // The AutoResetEvent will wait until startGame is complete.
                 reset.WaitOne();
 
-                MinecraftUtils.DownloadUpdateEvent -= downloadUpdateDelegate;
-                downloadDialog.downloadIsInProgress = false;
-                downloadDialog.Close();
-
-                if (downloadReturn.ReturnValue == "success")
+                if (!downloadError)
                 {
                     SaveVersionInformation(downloadReturn);
-
-                    // Start the game
-                    gameReturn = StartGame(profile, sGV, lastUsedProfile);
 
                     // Return the LaunchGameReturn provided by StartGame();
                     return (LaunchGameReturn)gameReturn;
