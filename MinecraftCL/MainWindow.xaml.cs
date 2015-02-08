@@ -233,6 +233,9 @@ namespace MinecraftCL
                     case LaunchReturnType.DownloadError:
                         errorWindow.errorTypeBox.Content = "It looks like an error occurred while downloading.";
                         break;
+                    case LaunchReturnType.UsingPlaceHolderModpack:
+                        errorWindow.errorTypeBox.Content = "It looks like you're trying to use a placeholder modpack to run Minecraft.";
+                        break;
                     default:
                         throw new Exception();
                 }

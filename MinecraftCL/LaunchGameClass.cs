@@ -17,7 +17,8 @@ namespace MinecraftCL
         MinecraftError,
         AuthenticationError,
         VersionInformationError,
-        DownloadError
+        DownloadError,
+        UsingPlaceHolderModpack
     }
 
     public struct LaunchGameReturn
@@ -150,6 +151,14 @@ namespace MinecraftCL
         /// <returns></returns>
         public static LaunchGameReturn DownloadAndStartGame(CLProfile profile, startGameVariables sGV, bool backupWorlds, string lastUsedProfile)
         {
+            // Make sure they're not trying to launch using a placeholder modpack
+            if (profile.ModpackInfo.Type == ModpackType.PlaceholderModpack)
+                return new LaunchGameReturn
+                {
+                    returnType = LaunchReturnType.UsingPlaceHolderModpack,
+                    returnInfo = "Please add a modpack before launching!"
+                };
+
             // Authenticate Minecraft using sGV.Username and sGV.Password
             string authenticationReturnString;
             bool authReturn = MinecraftUtils.authenticateMinecraft(ref sGV, out authenticationReturnString);
@@ -219,9 +228,29 @@ namespace MinecraftCL
 
                 SaveVersionInformation(downloadReturn);
             }
+
+            // By now, vanilla Minecraft is downloaded. Check if we need to download modpack.
+            if (profile.ModpackInfo.Type != ModpackType.MojangVanilla)
+            {
+                // Download modpacks
+                switch (profile.ModpackInfo.Type)
+                {
+                    case ModpackType.TechnicPack:
+                        break;
+                    case ModpackType.FeedTheBeastPublic:
+                        break;
+                    case ModpackType.FeedTheBeastPrivate:
+                        break;
+                    case ModpackType.MinecraftCL:
+                        break;
+                    case ModpackType.PlaceholderModpack:
+                        break;
+                    default:
+                        break;
+                }
+            }
             
-            // The version already exists, launch game
-            #region Backup Minecraft worlds if specified
+            // If specified, backup worlds before launching.
             if (backupWorlds == true && Directory.Exists(sGV.MinecraftDirectory + @"\saves\"))
             {
                 MessageWindow backupNotificationBox = new MessageWindow();
@@ -235,7 +264,6 @@ namespace MinecraftCL
 
                 backupNotificationBox.Close();
             }
-            #endregion
 
             return StartGame(profile, sGV, lastUsedProfile);
         }
