@@ -1,5 +1,6 @@
 ﻿using MinecraftLaunchLibrary;
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -7,6 +8,7 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace MinecraftCL
 {
@@ -175,7 +177,7 @@ namespace MinecraftCL
                 return new LaunchGameReturn
                 { 
                     returnType = LaunchReturnType.VersionInformationError, 
-                    returnInfo = error 
+                    returnInfo = error
                 };
 
             if (!mcVersionExists)
@@ -232,21 +234,25 @@ namespace MinecraftCL
             // By now, vanilla Minecraft is downloaded. Check if we need to download modpack.
             if (profile.ModpackInfo.Type != ModpackType.MojangVanilla)
             {
-                // Download modpacks
-                switch (profile.ModpackInfo.Type)
+                ObservableCollection<Modpack> packList = XmlDAL.DeserializeXml<ObservableCollection<Modpack>>("ModpackInformation.xml");
+
+                bool packExists = (from pack in packList where pack.name == profile.ModpackInfo.ID select pack).Any();
+                if (!packExists)
                 {
-                    case ModpackType.TechnicPack:
-                        break;
-                    case ModpackType.FeedTheBeastPublic:
-                        break;
-                    case ModpackType.FeedTheBeastPrivate:
-                        break;
-                    case ModpackType.MinecraftCL:
-                        break;
-                    case ModpackType.PlaceholderModpack:
-                        break;
-                    default:
-                        break;
+                    // Download modpacks
+                    switch (profile.ModpackInfo.Type)
+                    {
+                        case ModpackType.TechnicPack:
+                            break;
+                        case ModpackType.FeedTheBeastPublic:
+                            break;
+                        case ModpackType.FeedTheBeastPrivate:
+                            break;
+                        case ModpackType.MinecraftCL:
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
                 }
             }
             

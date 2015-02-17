@@ -39,11 +39,6 @@ namespace MinecraftCL.FeedTheBeast
             }
         }
 
-        private class FTBLibrary
-        {
-            public string name { get; set; }
-        }
-
         private class FTBPackJSON
         {
             public string minecraftArguments { get; set; }
@@ -203,6 +198,8 @@ namespace MinecraftCL.FeedTheBeast
                 modpack.url = ma["url"].Value;
             if (ma["dir"] != null)
                 modpack.dir = ma["dir"].Value;
+            if (ma["version"] != null)
+                modpack.version = ma["version"].Value;
 
             return modpack;
         }
