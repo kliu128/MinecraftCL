@@ -120,7 +120,13 @@ namespace MinecraftCL.FeedTheBeast
                             bool versionExists = LaunchGame.checkMinecraftExists(download.mcVersion);
                             if (versionExists == false)
                             {
-                                MinecraftUtils.DownloadGame(download.mcVersion);
+                                string downloadReturnValue;
+                                MinecraftUtils.DownloadGame(download.mcVersion, out downloadReturnValue);
+
+                                if (downloadReturnValue != "success")
+                                {
+                                    // TODO: Implement
+                                }
                             }
 
                             // Read out pack.json from the modpack zip file

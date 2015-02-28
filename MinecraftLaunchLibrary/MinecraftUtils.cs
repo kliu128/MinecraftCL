@@ -16,26 +16,6 @@ using System.Xml.Linq;
 
 namespace MinecraftLaunchLibrary
 {
-    public struct downloadGameReturn
-    {
-        public List<string> DownloadedLibraryLocations { get; set; }
-        public string AssetIndex { get; set; }
-        public string MainClass { get; set; }
-        public string ReturnValue { get; set; }
-        public string MinecraftVersion { get; set; }
-        
-        /// <summary>
-        /// The time that Minecraft was downloaded.
-        /// </summary>
-        public DateTime DownloadTime { get; set; }
-
-        /// <summary>
-        /// Includes information on how to launch the game, eg.
-        /// --username ${auth_player_name}, etc.
-        /// </summary>
-        public string LaunchArguments { get; set; }
-    }
-
     public struct Asset
     {
         public string FileName { get; set; }
@@ -56,7 +36,11 @@ namespace MinecraftLaunchLibrary
 
         #region Authentication Variables
         public string AccessToken { get; set; }
-        public string Username { get; set; }
+        public string MinecraftUsername { get; set; }
+        /// <summary>
+        /// The username/email used to log into Minecraft, eg. example@example.com or Example.
+        /// </summary>
+        public string LoginUsername { get; set; }
         public string Password { get; set; }
         public string userType { get; set; }
         public string UUID { get; set; }
@@ -140,7 +124,7 @@ namespace MinecraftLaunchLibrary
                         name = "Minecraft",     // -------- / So far this is the only encountered value
                         version = 1             // -------- / This number might be increased by the vanilla client in the future
                     },                          //          /
-                    username = sGV.Username,   // Can be an email address or player name for unmigrated accounts
+                    username = sGV.MinecraftUsername,   // Can be an email address or player name for unmigrated accounts
                     password = sGV.Password
                     //clientToken = "TOKEN"     // Client Identifier: optional
                 });
@@ -169,7 +153,7 @@ namespace MinecraftLaunchLibrary
                     if (responseJson.selectedProfile.id != null)                                        //Detect if this is an error Payload
                     {
                         sGV.UUID = responseJson.selectedProfile.id;                                       //Assign User ID
-                        sGV.Username = responseJson.selectedProfile.name;                                 //Assign Selected Profile Name
+                        sGV.MinecraftUsername = responseJson.selectedProfile.name;                                 //Assign Selected Profile Name
                         if (responseJson.selectedProfile.legacy == "true")
                         {
                             sGV.userType = "legacy";
@@ -368,7 +352,7 @@ namespace MinecraftLaunchLibrary
             return fileDownloaded;
         }
 
-        public static downloadGameReturn DownloadGame(string mcVersion, bool validate = false)
+        public static VersionInformation DownloadGame(string mcVersion, out string returnValue, bool validate = false)
         {
             try
             {
@@ -412,7 +396,8 @@ namespace MinecraftLaunchLibrary
                     if (w.Status == WebExceptionStatus.ProtocolError && (int)((HttpWebResponse)w.Response).StatusCode == 403) // Note: Mojang download servers give 403 error when file is not found
                     {
                         // If the file wasn't found on the server, raise an error
-                        return new downloadGameReturn { ReturnValue = "Download error. The information for Minecraft " + mcVersion + " could not be found on the server." };
+                        returnValue = "Download error. The information for Minecraft " + mcVersion + " could not be found on the server.";
+                        return null;
                     }
                     else
                     {
@@ -522,13 +507,13 @@ namespace MinecraftLaunchLibrary
                     });
 
                 // Return download information that is necessary for starting the game.
-                return new downloadGameReturn
+                returnValue = "success";
+                return new VersionInformation
                 {
                     AssetIndex = mcAssetsVersion,
                     DownloadedLibraryLocations = downloadedLibraryLocations,
                     DownloadTime = DateTime.Now,
                     MainClass = mcMainClass,
-                    ReturnValue = "success",
                     LaunchArguments = launchArguments,
                     MinecraftVersion = mcVersion
                 };
@@ -537,7 +522,8 @@ namespace MinecraftLaunchLibrary
             catch (Exception e)
             {
                 // An exception occured
-                return new downloadGameReturn { ReturnValue = "An error occurred while downloading files. " + e.Message };
+                returnValue = "An error occurred while downloading files. " + e.Message;
+                return null;
             }
         }
 

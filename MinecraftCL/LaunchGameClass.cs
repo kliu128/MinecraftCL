@@ -127,7 +127,7 @@ namespace MinecraftCL
                 startingArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/startingArguments").InnerText;
 
                 // Replace all of the various variables used with their actual values
-                startingArguments = startingArguments.Replace("${auth_player_name}", sGV.Username);
+                startingArguments = startingArguments.Replace("${auth_player_name}", sGV.MinecraftUsername);
                 startingArguments = startingArguments.Replace("${version_name}", sGV.Version);
                 startingArguments = startingArguments.Replace("${game_directory}", "\"" + sGV.MinecraftDirectory + "\"");
                 startingArguments = startingArguments.Replace("${assets_root}", "\"" + Environment.CurrentDirectory + "\\.minecraft\\assets\""); // For 1.7 and above
@@ -183,7 +183,8 @@ namespace MinecraftCL
             if (!mcVersionExists)
             {
                 // Version does not exist, begin setting up the download
-                downloadGameReturn downloadReturn = new downloadGameReturn();
+                VersionInformation version = new VersionInformation();
+                string downloadReturnValue = null;
                 DownloadDialog downloadDialog = new DownloadDialog();
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
@@ -199,7 +200,7 @@ namespace MinecraftCL
                 worker.DoWork += (o, x) =>
                     {
                         // Download the game
-                        downloadReturn = MinecraftUtils.DownloadGame(sGV.Version);
+                        version = MinecraftUtils.DownloadGame(sGV.Version, out downloadReturnValue);
                     };
                 worker.ProgressChanged += (o, x) =>
                     {
@@ -208,7 +209,7 @@ namespace MinecraftCL
                     };
                 worker.RunWorkerCompleted += (o, x) =>
                     {
-                        if (downloadReturn.ReturnValue == "success")
+                        if (downloadReturnValue == "success")
                             downloadError = false;
                         else
                             downloadError = true;
@@ -226,9 +227,9 @@ namespace MinecraftCL
 
                 if (downloadError)
                     // If there was a download error, forward it to the caller.
-                    return new LaunchGameReturn { returnType = LaunchReturnType.DownloadError, returnInfo = downloadReturn.ReturnValue };
+                    return new LaunchGameReturn { returnType = LaunchReturnType.DownloadError, returnInfo = downloadReturnValue };
 
-                SaveVersionInformation(downloadReturn);
+                SaveVersionInformation(version);
             }
 
             // By now, vanilla Minecraft is downloaded. Check if we need to download modpack.
@@ -236,6 +237,7 @@ namespace MinecraftCL
             {
                 ObservableCollection<Modpack> packList = XmlDAL.DeserializeXml<ObservableCollection<Modpack>>("ModpackInformation.xml");
 
+                /*
                 bool packExists = (from pack in packList where pack.name == profile.ModpackInfo.ID select pack).Any();
                 if (!packExists)
                 {
@@ -253,7 +255,7 @@ namespace MinecraftCL
                         default:
                             throw new NotImplementedException();
                     }
-                }
+                }*/
             }
             
             // If specified, backup worlds before launching.
@@ -274,7 +276,7 @@ namespace MinecraftCL
             return StartGame(profile, sGV, lastUsedProfile);
         }
 
-        private static void SaveVersionInformation(downloadGameReturn info)
+        private static void SaveVersionInformation(VersionInformation info)
         {
             string[] libraryLocationsArray = info.DownloadedLibraryLocations.ToArray();
             string libraryLaunchString = String.Join("\";\"", libraryLocationsArray);
@@ -373,11 +375,11 @@ namespace MinecraftCL
             if (xDoc.SelectSingleNode("/settings/Username") == null)
             {
                 XmlElement usernameElement = xDoc.CreateElement("Username");
-                usernameElement.InnerText = sGV.Username;
+                usernameElement.InnerText = sGV.MinecraftUsername;
                 xDocRoot.AppendChild(usernameElement);
             }
             else
-                xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.Username;
+                xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.MinecraftUsername;
 
             // Save password
             if (xDoc.SelectSingleNode("/settings/Password") == null)
