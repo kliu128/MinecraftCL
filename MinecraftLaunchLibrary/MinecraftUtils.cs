@@ -35,15 +35,11 @@ namespace MinecraftLaunchLibrary
         public string JavaLocation { get; set; }
 
         #region Authentication Variables
-        public string AccessToken { get; set; }
-        public string MinecraftUsername { get; set; }
         /// <summary>
         /// The username/email used to log into Minecraft, eg. example@example.com or Example.
         /// </summary>
         public string LoginUsername { get; set; }
         public string Password { get; set; }
-        public string userType { get; set; }
-        public string UUID { get; set; }
         #endregion
     }
 
@@ -106,10 +102,11 @@ namespace MinecraftLaunchLibrary
                 eventCopy(e);
         }
 
-        public static bool authenticateMinecraft(ref startGameVariables sGV, out string returnString)
+        public static AuthenticationInformation authenticateMinecraft(string username, string password, out string returnString)
         {
             returnString = "success"; // This will be changed when there is an error in the code
-            bool authenticationSuccess = true;
+            AuthenticationInformation auth = new AuthenticationInformation();
+
             try
             {
                 var responsePayload = "";
@@ -117,15 +114,15 @@ namespace MinecraftLaunchLibrary
                 /* Code from AtomLauncher */
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://authserver.mojang.com/authenticate"); //Start WebRequest
                 request.Method = "POST";                                                                //Method type, POST
-                string json = Newtonsoft.Json.JsonConvert.SerializeObject(new                           //Object to Upload
+                string json = JsonConvert.SerializeObject(new                           //Object to Upload
                 {
                     agent = new                 // optional /                                           //This seems to be required for minecraft despite them saying its optional.
                     {                           //          /
                         name = "Minecraft",     // -------- / So far this is the only encountered value
                         version = 1             // -------- / This number might be increased by the vanilla client in the future
                     },                          //          /
-                    username = sGV.MinecraftUsername,   // Can be an email address or player name for unmigrated accounts
-                    password = sGV.Password
+                    username = username,   // Can be an email address or player name for unmigrated accounts
+                    password = password
                     //clientToken = "TOKEN"     // Client Identifier: optional
                 });
                 byte[] uploadBytes = Encoding.UTF8.GetBytes(json);                                      //Convert UploadObject to ByteArray
@@ -148,36 +145,33 @@ namespace MinecraftLaunchLibrary
                 dynamic responseJson = JsonConvert.DeserializeObject(responsePayload);                  //Convert string to dynamic josn object
                 if (responseJson.accessToken != null)                                                   //Detect if this is an error Payload
                 {
-                    sGV.AccessToken = responseJson.accessToken;                                           //Assign Access Token
+                    auth.AccessToken = responseJson.accessToken;                                           //Assign Access Token
                     //mcClientToken = responseJson.clientToken;                                           //Assign Client Token
                     if (responseJson.selectedProfile.id != null)                                        //Detect if this is an error Payload
                     {
-                        sGV.UUID = responseJson.selectedProfile.id;                                       //Assign User ID
-                        sGV.MinecraftUsername = responseJson.selectedProfile.name;                                 //Assign Selected Profile Name
+                        auth.UUID = responseJson.selectedProfile.id;                                       //Assign User ID
+                        auth.MinecraftUsername = responseJson.selectedProfile.name;                                 //Assign Selected Profile Name
                         if (responseJson.selectedProfile.legacy == "true")
                         {
-                            sGV.userType = "legacy";
+                            auth.userType = "legacy";
                         }
                         else
                         {
-                            sGV.userType = "mojang";
+                            auth.userType = "mojang";
                         }
                     }
                     else
                     {
                         returnString = "Error: WebPayLoad: Missing UUID and Username";
-                        authenticationSuccess = false;
                     }
                 }
                 else if (responseJson.errorMessage != null)
                 {
                     returnString = "Error: WebPayLoad: " + responseJson.errorMessage;
-                    authenticationSuccess = false;
                 }
                 else
                 {
                     returnString = "Error: WebPayLoad: Had an error and the payload was empty.";
-                    authenticationSuccess = false;
                 }
             }
             catch (System.Net.WebException startGameException)
@@ -192,9 +186,8 @@ namespace MinecraftLaunchLibrary
                     // Catches any other exceptions that may occur
                     returnString = "There was an error. Check your username + password. Exception: " + startGameException;
                 }
-                authenticationSuccess = false;
             }
-            return authenticationSuccess;
+            return auth;
         }
 
         /// <summary>

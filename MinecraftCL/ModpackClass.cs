@@ -110,8 +110,7 @@ namespace MinecraftCL
                 // for the vanilla version of minecraft
                 sGV.Version = modpackNode.SelectSingleNode("mcVersion").InnerText;
 
-                string errorInformation;
-                bool minecraftVersionExists = LaunchGame.getVersionInformation(ref sGV, out errorInformation);
+                bool minecraftVersionExists = LaunchGame.checkMinecraftExists(sGV.Version);
 
                 // Set the version to {$modpack-type}-{$modpack-name}
                 sGV.Version = modpackNode.Attributes["type"].Value + "-" + modpackNode.Attributes["name"].Value;

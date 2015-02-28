@@ -45,6 +45,25 @@ namespace MinecraftCL
 
             dynamic mcVersionDynamic = MinecraftServerUtils.GetVersionsJson();
 
+            // Change out "latest-release" and "latest-snapshot" to the actual versions
+            if (mcVersionDynamic != null)
+            {
+                if (minecraftVersion == "latest-release")
+                {
+                    minecraftVersion = mcVersionDynamic.latest.release;
+                }
+                else if (minecraftVersion == "latest-snapshot")
+                {
+                    minecraftVersion = mcVersionDynamic.latest.snapshot;
+                }
+            }
+            else if (minecraftVersion == "latest-release" || minecraftVersion == "latest-snapshot")
+            {
+                // System is not connected to the internet/mojang servers and user is trying to launch a
+                // "latest-*****" version, return error.
+                return false;
+            }
+
             // Open VersionInformation.xml
             XmlDocument doc = new XmlDocument();
             doc.Load(System.Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
@@ -85,7 +104,7 @@ namespace MinecraftCL
         /// <param name="sGV"></param>
         /// <param name="errorInformation"></param>
         /// <returns></returns>
-        public static bool getVersionInformation(ref startGameVariables sGV, out string errorInformation)
+        public static bool getVersionInformation(ref startGameVariables sGV, AuthenticationInformation auth, out string errorInformation)
         {
             dynamic mcVersionDynamic = MinecraftServerUtils.GetVersionsJson();
 
@@ -127,17 +146,17 @@ namespace MinecraftCL
                 startingArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/startingArguments").InnerText;
 
                 // Replace all of the various variables used with their actual values
-                startingArguments = startingArguments.Replace("${auth_player_name}", sGV.MinecraftUsername);
+                startingArguments = startingArguments.Replace("${auth_player_name}", auth.MinecraftUsername);
                 startingArguments = startingArguments.Replace("${version_name}", sGV.Version);
                 startingArguments = startingArguments.Replace("${game_directory}", "\"" + sGV.MinecraftDirectory + "\"");
                 startingArguments = startingArguments.Replace("${assets_root}", "\"" + Environment.CurrentDirectory + "\\.minecraft\\assets\""); // For 1.7 and above
                 startingArguments = startingArguments.Replace("${game_assets}", "\"" + Environment.CurrentDirectory + "\\.minecraft\\assets\\virtual\\legacy\""); // For legacy versions 1.6.4 or below
                 startingArguments = startingArguments.Replace("${assets_index_name}", mcAssetsVersion);
-                startingArguments = startingArguments.Replace("${auth_uuid}", sGV.UUID);
-                startingArguments = startingArguments.Replace("${auth_access_token}", sGV.AccessToken);
+                startingArguments = startingArguments.Replace("${auth_uuid}", auth.UUID);
+                startingArguments = startingArguments.Replace("${auth_access_token}", auth.AccessToken);
                 startingArguments = startingArguments.Replace("${user_properties}", "{}"); // Yeah, no twitch here...
-                startingArguments = startingArguments.Replace("${user_type}", sGV.userType);
-                startingArguments = startingArguments.Replace("${auth_session}", sGV.AccessToken);
+                startingArguments = startingArguments.Replace("${user_type}", auth.userType);
+                startingArguments = startingArguments.Replace("${auth_session}", auth.AccessToken);
                 sGV.LaunchArguments = startingArguments;
             }
 
@@ -161,24 +180,8 @@ namespace MinecraftCL
                     returnInfo = "Please add a modpack before launching!"
                 };
 
-            // Authenticate Minecraft using sGV.Username and sGV.Password
-            string authenticationReturnString;
-            bool authReturn = MinecraftUtils.authenticateMinecraft(ref sGV, out authenticationReturnString);
-            if (authReturn == false)
-            {
-                // authentication failed
-                return new LaunchGameReturn { returnInfo = authenticationReturnString, returnType = LaunchReturnType.AuthenticationError };
-            }
-
             // See if the vanilla version of Minecraft exists that is required
-            string error;
-            bool mcVersionExists = getVersionInformation(ref sGV, out error);
-            if (error != "")
-                return new LaunchGameReturn
-                { 
-                    returnType = LaunchReturnType.VersionInformationError, 
-                    returnInfo = error
-                };
+            bool mcVersionExists = checkMinecraftExists(sGV.Version);
 
             if (!mcVersionExists)
             {
@@ -367,6 +370,15 @@ namespace MinecraftCL
         /// <returns></returns>
         private static LaunchGameReturn StartGame(CLProfile profile, startGameVariables sGV, string lastUsedProfile)
         {
+            // Authenticate Minecraft using sGV.Username and sGV.Password
+            string authReturnString;
+            AuthenticationInformation authInfo = MinecraftUtils.authenticateMinecraft(sGV.LoginUsername, sGV.Password, out authReturnString);
+            if (authReturnString != "success")
+            {
+                // authentication failed
+                return new LaunchGameReturn { returnInfo = authReturnString, returnType = LaunchReturnType.AuthenticationError };
+            }
+
             #region Save Settings (Username, Password, Last used profile)
             XmlDocument xDoc = new XmlDocument();
             xDoc.Load(System.Environment.CurrentDirectory + @"\.mcl\MinecraftCLSettings.xml");
@@ -375,11 +387,11 @@ namespace MinecraftCL
             if (xDoc.SelectSingleNode("/settings/Username") == null)
             {
                 XmlElement usernameElement = xDoc.CreateElement("Username");
-                usernameElement.InnerText = sGV.MinecraftUsername;
+                usernameElement.InnerText = sGV.LoginUsername;
                 xDocRoot.AppendChild(usernameElement);
             }
             else
-                xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.MinecraftUsername;
+                xDoc.SelectSingleNode("/settings/Username").InnerText = sGV.LoginUsername;
 
             // Save password
             if (xDoc.SelectSingleNode("/settings/Password") == null)
@@ -415,7 +427,7 @@ namespace MinecraftCL
                 sGV.JavaLocation = profile.customJavaEXE;
 
             string versionInformationError;
-            getVersionInformation(ref sGV, out versionInformationError);
+            getVersionInformation(ref sGV, authInfo, out versionInformationError);
             if (versionInformationError != "")
                 return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
 

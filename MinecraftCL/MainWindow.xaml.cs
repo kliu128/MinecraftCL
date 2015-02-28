@@ -195,7 +195,7 @@ namespace MinecraftCL
 
             startGameVariables sGV = new startGameVariables
             {
-                MinecraftUsername = usernameBox.Text,
+                LoginUsername = usernameBox.Text,
                 Password = passwordBox.Password,
 
                 Version = currentProfile.MojangVersion,

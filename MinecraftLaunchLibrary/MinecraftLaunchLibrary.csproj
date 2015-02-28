@@ -58,6 +58,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AuthenticationInformation.cs" />
     <Compile Include="MinecraftServerUtils.cs" />
     <Compile Include="MinecraftUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
