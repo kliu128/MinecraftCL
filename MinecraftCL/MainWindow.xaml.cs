@@ -113,11 +113,6 @@ namespace MinecraftCL
                 XMLCreate.Close();
             }
 
-            if (!File.Exists(System.Environment.CurrentDirectory + @"\.mcl\ModpackSettings.xml"))
-            {
-                File.Create(System.Environment.CurrentDirectory + @"\.mcl\ModpackSettings.xml");
-            }
-
             // Set up FTB download servers and grab modpack list asynchronously
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += (o, x) =>
@@ -204,42 +199,48 @@ namespace MinecraftCL
 
             LaunchGameReturn launchReturn = LaunchGame.DownloadAndStartGame(currentProfile, sGV, autoBackupWorlds, ((CLProfile)profileSelectBox.SelectedItem).ToString());
 
-            if (launchReturn.returnType == LaunchReturnType.SuccessfulLaunch)
+            switch (launchReturn.returnType)
             {
-                DebugConsole.Print("Successful Minecraft session - closing!", "MainWindow.Button_Click()");
-                this.Close();
-                return;
-            }
-            else if (launchReturn.returnType == LaunchReturnType.AuthenticationError)
-            {
-                debugLabel.Text = "Authentication error. Check your username and password.";
-                debugLabel.Foreground = Brushes.Red;
-            }
-            else
-            {
-                ErrorWindow errorWindow = new ErrorWindow(((CLProfile)(profileSelectBox.SelectedValue)), sGV);
-                errorWindow.errorMessageBox.Text = launchReturn.returnInfo;
-                switch (launchReturn.returnType)
-                {
-                    case LaunchReturnType.CouldNotLocateJava:
-                        errorWindow.errorTypeBox.Content = "We could not locate your Java installation. Try reinstalling Java.";
-                        break;
-                    case LaunchReturnType.MinecraftError:
-                        errorWindow.errorTypeBox.Content = "It looks like an error occurred while running Minecraft.";
-                        break;
-                    case LaunchReturnType.VersionInformationError:
-                        errorWindow.errorTypeBox.Content = "It looks like an error occurred while getting Minecraft version info.";
-                        break;
-                    case LaunchReturnType.DownloadError:
-                        errorWindow.errorTypeBox.Content = "It looks like an error occurred while downloading.";
-                        break;
-                    case LaunchReturnType.UsingPlaceHolderModpack:
-                        errorWindow.errorTypeBox.Content = "It looks like you're trying to use a placeholder modpack to run Minecraft.";
-                        break;
-                    default:
-                        throw new Exception();
-                }
-                errorWindow.ShowDialog();
+                case LaunchReturnType.SuccessfulLaunch:
+                    DebugConsole.Print("Successful Minecraft session - closing!", "MainWindow.Button_Click()");
+                    this.Close();
+                    return;
+
+                case LaunchReturnType.AuthenticationError:
+                    debugLabel.Text = "Authentication error. Check your username and password.";
+                    debugLabel.Foreground = Brushes.Red;
+                    break;
+
+                case LaunchReturnType.UsingPlaceHolderModpack:
+                    debugLabel.Text = "Don't forget to set a modpack!";
+                    debugLabel.Foreground = Brushes.Red;
+                    break;
+
+                default:
+                    ErrorWindow errorWindow = new ErrorWindow(((CLProfile)(profileSelectBox.SelectedValue)), sGV);
+                    errorWindow.errorMessageBox.Text = launchReturn.returnInfo;
+                    switch (launchReturn.returnType)
+                    {
+                        case LaunchReturnType.CouldNotLocateJava:
+                            errorWindow.errorTypeBox.Content = "We could not locate your Java installation. Try reinstalling Java.";
+                            break;
+                        case LaunchReturnType.MinecraftError:
+                            errorWindow.errorTypeBox.Content = "It looks like an error occurred while running Minecraft.";
+                            break;
+                        case LaunchReturnType.VersionInformationError:
+                            errorWindow.errorTypeBox.Content = "It looks like an error occurred while getting Minecraft version info.";
+                            break;
+                        case LaunchReturnType.DownloadError:
+                            errorWindow.errorTypeBox.Content = "It looks like an error occurred while downloading.";
+                            break;
+                        case LaunchReturnType.UsingPlaceHolderModpack:
+                            errorWindow.errorTypeBox.Content = "It looks like you're trying to use a placeholder modpack to run Minecraft.";
+                            break;
+                        default:
+                            throw new Exception();
+                    }
+                    errorWindow.ShowDialog();
+                    break;
             }
 
             ControlsGrid.IsEnabled = true;
