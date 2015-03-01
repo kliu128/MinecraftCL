@@ -43,17 +43,20 @@ namespace MinecraftCL
         }
     }
 
-    [DataContract]
-    [XmlInclude(typeof(FeedTheBeast.FTBModpack))]
-    [XmlInclude(typeof(ModpackType))]
     public class Modpack
     {
+        [XmlIgnore]
         public virtual string name { get; set; }
-        public virtual string author { get; set;}
+        [XmlIgnore]
+        public virtual string author { get; set; }
+        [XmlIgnore]
         public virtual string mcVersion { get; set; }
+        [XmlIgnore]
         public virtual ModpackType Type { get; set; }
         // Version can be "Recommended" for latest, or a specific version
+        [XmlIgnore]
         public virtual string Version { get; set; }
+        [XmlIgnore]
         public string DisplayInformation
         {
             get

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace MinecraftCL
@@ -24,6 +25,16 @@ namespace MinecraftCL
             XmlSerializer deserializer = new XmlSerializer(typeof(T));
 
             using (Stream reader = File.OpenRead(System.Environment.CurrentDirectory + @"\.mcl\" + xmlFile))
+            {
+                return (T)(deserializer.Deserialize(reader));
+            }
+        }
+
+        public static T DeserializeXml<T>(XmlDocument xml)
+        {
+            XmlSerializer deserializer = new XmlSerializer(typeof(T));
+
+            using (TextReader reader = new StringReader(xml.OuterXml))
             {
                 return (T)(deserializer.Deserialize(reader));
             }

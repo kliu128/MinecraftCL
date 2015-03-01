@@ -33,7 +33,6 @@ namespace MinecraftCL
 
             ftbPublicPackCombobox.ItemsSource = FTBLocations.PublicModpacks;
             ftbPublicPackCombobox.SelectedIndex = 0;
-
         }
 
         private void addModpackButton_Click(object sender, RoutedEventArgs e)

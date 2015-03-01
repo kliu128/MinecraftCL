@@ -13,24 +13,16 @@ namespace MinecraftCL.FeedTheBeast
 {
     public static class FTBUtils
     {
-        
-
-        public static List<FTBModpack> GetModpacks(out Exception resultException)
+        public static FTBModpackList GetModpacks(out Exception resultException)
         {
             try
             {
-                WebClient webClient = new WebClient();
                 XmlDocument modpackDoc = new XmlDocument();
-                List<FTBModpack> modpackList = new List<FTBModpack>();
-
                 modpackDoc.Load(FTBLocations.MasterDownloadRepo + FTBLocations.FTB2Static + "modpacks.xml");
-                XmlNodeList modpackNodes = modpackDoc.SelectNodes("/modpacks/modpack");
-                foreach (XmlNode modpackNode in modpackNodes)
-                {
-                    modpackList.Add(ParseSingleModpackXML(modpackNode));
-                }
+                
+                FTBModpackList modpacks = XmlDAL.DeserializeXml<FTBModpackList>(modpackDoc);
                 resultException = null;
-                return modpackList;
+                return modpacks;
             }
             catch (Exception e)
             {
@@ -192,6 +184,7 @@ namespace MinecraftCL.FeedTheBeast
             FTBModpack modpack = new FTBModpack();
             XmlAttributeCollection ma = modpackElement.Attributes;
 
+            /*
             if (ma["name"] != null)
                 modpack.name = ma["name"].Value;
             if (ma["author"] != null)
@@ -205,7 +198,8 @@ namespace MinecraftCL.FeedTheBeast
             if (ma["dir"] != null)
                 modpack.dir = ma["dir"].Value;
             if (ma["version"] != null)
-                modpack.version = ma["version"].Value;
+                modpack.version = ma["version"].Value;*/
+
 
             return modpack;
         }

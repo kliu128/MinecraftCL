@@ -153,11 +153,11 @@ namespace MinecraftLaunchLibrary
                         auth.MinecraftUsername = responseJson.selectedProfile.name;                                 //Assign Selected Profile Name
                         if (responseJson.selectedProfile.legacy == "true")
                         {
-                            auth.userType = "legacy";
+                            auth.UserType = "legacy";
                         }
                         else
                         {
-                            auth.userType = "mojang";
+                            auth.UserType = "mojang";
                         }
                     }
                     else

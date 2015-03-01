@@ -155,7 +155,7 @@ namespace MinecraftCL
                 startingArguments = startingArguments.Replace("${auth_uuid}", auth.UUID);
                 startingArguments = startingArguments.Replace("${auth_access_token}", auth.AccessToken);
                 startingArguments = startingArguments.Replace("${user_properties}", "{}"); // Yeah, no twitch here...
-                startingArguments = startingArguments.Replace("${user_type}", auth.userType);
+                startingArguments = startingArguments.Replace("${user_type}", auth.UserType);
                 startingArguments = startingArguments.Replace("${auth_session}", auth.AccessToken);
                 sGV.LaunchArguments = startingArguments;
             }

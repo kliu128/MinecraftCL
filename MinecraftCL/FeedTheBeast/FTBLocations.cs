@@ -43,6 +43,6 @@ namespace MinecraftCL.FeedTheBeast
         public static string DownloadServer { get; set; }
         public static bool DownloadServersInitialized { get; set; }
 
-        public static List<FTBModpack> PublicModpacks { get; set; }
+        public static FTBModpackList PublicModpacks { get; set; }
     }
 }

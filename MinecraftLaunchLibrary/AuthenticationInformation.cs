@@ -10,6 +10,6 @@ namespace MinecraftLaunchLibrary
         public string MinecraftUsername { get; set; }
         public string AccessToken { get; set; }
         public string UUID { get; set; }
-        public string userType { get; set; }
+        public string UserType { get; set; }
     }
 }
