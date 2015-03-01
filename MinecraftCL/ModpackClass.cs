@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using System.Runtime.Serialization;
 using System.Xml;
 using MinecraftLaunchLibrary;
+using MinecraftCL.FeedTheBeast;
 
 namespace MinecraftCL
 {
@@ -43,6 +44,7 @@ namespace MinecraftCL
         }
     }
 
+    [XmlInclude(typeof(FTBModpack))]
     public class Modpack
     {
         [XmlIgnore]

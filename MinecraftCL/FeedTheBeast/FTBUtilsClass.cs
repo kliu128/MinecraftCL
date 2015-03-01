@@ -21,8 +21,9 @@ namespace MinecraftCL.FeedTheBeast
                 modpackDoc.Load(FTBLocations.MasterDownloadRepo + FTBLocations.FTB2Static + "modpacks.xml");
                 
                 FTBModpackList modpacks = XmlDAL.DeserializeXml<FTBModpackList>(modpackDoc);
-                resultException = null;
                 List<FTBModpack> modpackList = new List<FTBModpack>(modpacks.modpack);
+
+                resultException = null;
                 return modpackList;
             }
             catch (Exception e)
@@ -159,5 +160,41 @@ namespace MinecraftCL.FeedTheBeast
             }
         }
 
+        public static bool? GetPrivatePack(string privatePackCode, out FTBModpack modpack)
+        {
+            // HACK: This returns null if there is an exception. Return the actual exception?
+            try
+            {
+                string packXmlFile = FTBLocations.MasterDownloadRepo + FTBLocations.FTB2Static + privatePackCode + ".xml";
+
+                // See whether pack xml exists on server
+                try
+                {
+                    WebRequest webRequest = WebRequest.Create(packXmlFile);
+                    webRequest.Timeout = 5000;
+                    webRequest.Method = "HEAD";
+                    webRequest.GetResponse();
+                }
+                catch
+                {
+                    // Invalid pack code, <pack>.xml does not exist on server
+                    modpack = null;
+                    return false;
+                }
+
+                // Load and deserialize modpack
+                XmlDocument modpackDoc = new XmlDocument();
+                modpackDoc.Load(packXmlFile);
+
+                FTBModpackList privatePackXml = XmlDAL.DeserializeXml<FTBModpackList>(modpackDoc);
+                modpack = privatePackXml.modpack[0];
+                return true;
+            }
+            catch (Exception)
+            {
+                modpack = null;
+                return null;
+            }
+        }
     }
 }

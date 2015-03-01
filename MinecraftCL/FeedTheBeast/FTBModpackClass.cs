@@ -24,7 +24,7 @@ namespace MinecraftCL.FeedTheBeast
     {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public new string author { get; set; }
+        public override string author { get; set; }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -44,7 +44,7 @@ namespace MinecraftCL.FeedTheBeast
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public new string name { get; set; }
+        public override string name { get; set; }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -76,8 +76,6 @@ namespace MinecraftCL.FeedTheBeast
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public new string mcVersion { get; set; }
-
-        public string privatePackCode { get; set; }
+        public override string mcVersion { get; set; }
     }
 }
