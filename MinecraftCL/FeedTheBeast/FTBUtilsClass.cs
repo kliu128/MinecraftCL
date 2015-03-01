@@ -13,7 +13,7 @@ namespace MinecraftCL.FeedTheBeast
 {
     public static class FTBUtils
     {
-        public static FTBModpackList GetModpacks(out Exception resultException)
+        public static List<FTBModpack> GetModpacks(out Exception resultException)
         {
             try
             {
@@ -22,7 +22,8 @@ namespace MinecraftCL.FeedTheBeast
                 
                 FTBModpackList modpacks = XmlDAL.DeserializeXml<FTBModpackList>(modpackDoc);
                 resultException = null;
-                return modpacks;
+                List<FTBModpack> modpackList = new List<FTBModpack>(modpacks.modpack);
+                return modpackList;
             }
             catch (Exception e)
             {
@@ -158,50 +159,5 @@ namespace MinecraftCL.FeedTheBeast
             }
         }
 
-        /// <summary>
-        /// Loads a single modpack from a URL and parses it.
-        /// </summary>
-        public static FTBModpack ParseSingleModpackXML(string XMLURL)
-        {
-            FTBModpack modpack = new FTBModpack();
-            try
-            {
-                XmlDocument modpackDoc = new XmlDocument();
-                modpackDoc.Load(XMLURL);
-                return ParseSingleModpackXML(modpackDoc.SelectSingleNode("modpacks/modpack"));
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Parses XML of a single modpack and returns a corresponding FTBModpack class.
-        /// </summary>
-        public static FTBModpack ParseSingleModpackXML(XmlNode modpackElement)
-        {
-            FTBModpack modpack = new FTBModpack();
-            XmlAttributeCollection ma = modpackElement.Attributes;
-
-            /*
-            if (ma["name"] != null)
-                modpack.name = ma["name"].Value;
-            if (ma["author"] != null)
-                modpack.author = ma["author"].Value;
-            if (ma["mcVersion"] != null)
-                modpack.mcVersion = ma["mcVersion"].Value;
-            if (ma["repoVersion"] != null)
-                modpack.repoVersion = ma["repoVersion"].Value;
-            if (ma["url"] != null)
-                modpack.url = ma["url"].Value;
-            if (ma["dir"] != null)
-                modpack.dir = ma["dir"].Value;
-            if (ma["version"] != null)
-                modpack.version = ma["version"].Value;*/
-
-
-            return modpack;
-        }
     }
 }

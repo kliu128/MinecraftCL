@@ -46,6 +46,8 @@ namespace MinecraftCL
 
             if (ftbPrivateCheckbox.IsChecked == true)
             {
+                // TODO: Reimplement with Xml deserialization.
+                /*
                 FTBModpack newPack = FTBUtils.ParseSingleModpackXML(FTBLocations.MasterDownloadRepo + FTBLocations.FTB2Static + ftbPrivatePackCodeBox.Text + ".xml");
                 if (newPack == null)
                 {
@@ -57,7 +59,7 @@ namespace MinecraftCL
                 {
                     newPack.Type = ModpackType.FeedTheBeastPrivate;
                     newPack.privatePackCode = ftbPrivatePackCodeBox.Text;
-                }
+                }*/
             }
 
             // Remove the placeholder "add a modpack" entry if an actual pack is added

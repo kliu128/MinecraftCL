@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 namespace MinecraftCL.FeedTheBeast
 {
     [XmlRoot("modpacks")]
-    public partial class FTBModpackList : IEnumerable
+    public partial class FTBModpackList
     {
         /// <remarks/>
         public object script { get; set; }
@@ -16,27 +16,6 @@ namespace MinecraftCL.FeedTheBeast
         /// <remarks/>
         [XmlElementAttribute("modpack")]
         public FTBModpack[] modpack { get; set; }
-
-        public void Add(object o)
-        {
-            // Placeholder to appease the XmlSerializer gods.
-        }
-
-        public FTBModpack this[int index]
-        {
-            get { return modpack[index]; }
-            set { modpack[index] = value; }
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            return modpack.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
     }
 
     /// <remarks/>
