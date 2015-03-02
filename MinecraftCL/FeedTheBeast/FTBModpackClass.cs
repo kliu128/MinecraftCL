@@ -19,63 +19,63 @@ namespace MinecraftCL.FeedTheBeast
     }
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlTypeAttribute()]
+    [XmlTypeAttribute()]
     public class FTBModpack : Modpack
     {
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public override string author { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string description { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string image { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string logo { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string mods { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public override string name { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string oldVersions { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string repoVersion { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string serverPack { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string squareImage { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string url { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string version { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public string dir { get; set; }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttributeAttribute()]
         public override string mcVersion { get; set; }
     }
 }
