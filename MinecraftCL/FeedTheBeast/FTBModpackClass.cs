@@ -16,6 +16,11 @@ namespace MinecraftCL.FeedTheBeast
         public FTBModpack[] modpack { get; set; }
     }
 
+    /// <summary>
+    /// <para>An aside on what this class is for -</para>
+    /// <para>This class is used both for automatic deserialization and to display modpack information and launch it.</para>
+    /// <para>This class does *not* need to correspond exactly with it's equivalent version on modpacks.xml.</para>
+    /// </summary>
     [XmlTypeAttribute()]
     public class FTBModpack : Modpack
     {
