@@ -111,7 +111,7 @@ namespace MinecraftCL.FeedTheBeast
                             Directory.Move(installDir + @"\minecraft\", installDir + @"\.minecraft\");
 
                             // Download the vanilla natives and jar
-                            bool versionExists = LaunchGame.checkMinecraftExists(download.mcVersion);
+                            bool versionExists = LaunchGame.checkVersionExists(download.mcVersion, ModpackType.MojangVanilla);
                             if (versionExists == false)
                             {
                                 string downloadReturnValue;

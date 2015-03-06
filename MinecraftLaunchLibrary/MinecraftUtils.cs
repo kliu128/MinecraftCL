@@ -12,8 +12,6 @@ using System.Web.Script.Serialization;
 using System.Xml;
 using System.Xml.Linq;
 
-
-
 namespace MinecraftLaunchLibrary
 {
     public struct Asset
@@ -26,13 +24,10 @@ namespace MinecraftLaunchLibrary
 
     public class startGameVariables
     {
-        public string Version { get; set; }
-        public string MinecraftDirectory { get; set; }
-        public string MCLibraryArguments { get; set; }
-        public string MainClass { get; set; }
-        public string LaunchArguments { get; set; }
         public string JavaArguments { get; set; }
         public string JavaLocation { get; set; }
+        public string MinecraftDirectory { get; set; }
+        public string Version { get; set; }
 
         #region Authentication Variables
         /// <summary>
@@ -240,7 +235,7 @@ namespace MinecraftLaunchLibrary
         /// (such as authToken, versionInfo, etc.).
         /// </summary>
         /// <returns>Returns the Minecraft java process.</returns>
-        public static startGameReturn Start(startGameVariables sGV)
+        public static startGameReturn Start(startGameVariables sGV, VersionInformation versionInfo)
         {
             // Begin to set up Minecraft java process
             ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -265,12 +260,14 @@ namespace MinecraftLaunchLibrary
                 // A java location is set.
                 startInfo.FileName = sGV.JavaLocation;
 
-            string pArguments = "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump " + sGV.JavaArguments + " -Djava.library.path=\""
+            string libraries = versionInfo.LibraryLocationsAsString();
+            libraries = libraries.Replace("%mcInstallDir%", Environment.CurrentDirectory);
+
+            startInfo.Arguments = "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump " + sGV.JavaArguments + " -Djava.library.path=\""
             + Environment.CurrentDirectory + @"\.minecraft\versions\"
-            + sGV.Version + @"\" + sGV.Version + "-natives\" -cp "
-            + sGV.MCLibraryArguments + ";\""
-            + Environment.CurrentDirectory + @"\.minecraft\versions\" + sGV.Version + @"\" + sGV.Version + ".jar\" " + sGV.MainClass + " " + sGV.LaunchArguments;
-            startInfo.Arguments = pArguments.Replace("%mcInstallDir%", Environment.CurrentDirectory);
+            + versionInfo.MinecraftVersion + @"\" + versionInfo.MinecraftVersion + "-natives\" -cp "
+            + libraries + ";\""
+            + Environment.CurrentDirectory + @"\.minecraft\versions\" + versionInfo.MinecraftVersion + @"\" + versionInfo.MinecraftVersion + ".jar\" " + versionInfo.MainClass + " " + versionInfo.LaunchArguments;
             startInfo.WorkingDirectory = sGV.MinecraftDirectory;
 
             // Start Minecraft and return
@@ -504,7 +501,7 @@ namespace MinecraftLaunchLibrary
                 return new VersionInformation
                 {
                     AssetIndex = mcAssetsVersion,
-                    DownloadedLibraryLocations = downloadedLibraryLocations,
+                    LibraryLocations = downloadedLibraryLocations,
                     DownloadTime = DateTime.Now,
                     MainClass = mcMainClass,
                     LaunchArguments = launchArguments,

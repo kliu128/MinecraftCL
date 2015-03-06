@@ -9,6 +9,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace MinecraftCL
 {
@@ -36,28 +37,28 @@ namespace MinecraftCL
         /// True = Version exists
         /// False = Version must be downloaded
         /// </summary>
-        /// <param name="minecraftVersion"></param>
+        /// <param name="version">Either vanilla version (1.7.10 for example) or modded version.</param>
         /// <returns></returns>
-        public static bool checkMinecraftExists(string minecraftVersion)
+        public static bool checkVersionExists(string version, ModpackType type)
         {
             // TODO: Rewrite this to be compatible with the official Minecraft launcher's
             // json settings file
 
             dynamic mcVersionDynamic = MinecraftServerUtils.GetVersionsJson();
-
+            
             // Change out "latest-release" and "latest-snapshot" to the actual versions
             if (mcVersionDynamic != null)
             {
-                if (minecraftVersion == "latest-release")
+                if (version == "latest-release")
                 {
-                    minecraftVersion = mcVersionDynamic.latest.release;
+                    version = mcVersionDynamic.latest.release;
                 }
-                else if (minecraftVersion == "latest-snapshot")
+                else if (version == "latest-snapshot")
                 {
-                    minecraftVersion = mcVersionDynamic.latest.snapshot;
+                    version = mcVersionDynamic.latest.snapshot;
                 }
             }
-            else if (minecraftVersion == "latest-release" || minecraftVersion == "latest-snapshot")
+            else if (version == "latest-release" || version == "latest-snapshot")
             {
                 // System is not connected to the internet/mojang servers and user is trying to launch a
                 // "latest-*****" version, return error.
@@ -68,7 +69,7 @@ namespace MinecraftCL
             XmlDocument doc = new XmlDocument();
             doc.Load(System.Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
 
-            if (doc.SelectSingleNode("//versions/version[@version='" + minecraftVersion + "']") != null)
+            if (doc.SelectSingleNode("//versions/version[@version='" + version + "']") != null)
             {
                 // If //versions/version[$version] isn't null, the version has already been recorded
                 // Now to check to see if the version has been updated.
@@ -77,14 +78,14 @@ namespace MinecraftCL
                     // Check in mcVersionDynamic (version.json file) to see if the version needs to be redownloaded
                     foreach (var item in mcVersionDynamic.versions)
                     {
-                        if (item.id == minecraftVersion)
+                        if (item.id == version)
                         {
                             string itemReleaseTime = item.releaseTime;
 
                             // ..um, what? Format of date string above is different than versions.json date string.
                             // Format string should be "yyyy'-'MM'-'dd'T'HH:mm:sszzz".
                             DateTime serverReleaseTime = DateTime.Parse(itemReleaseTime, null);
-                            DateTime savedDownloadTime = DateTime.Parse(doc.SelectSingleNode(@"//versions/version[@version='" + minecraftVersion + "']/savedReleaseTime").InnerText);
+                            DateTime savedDownloadTime = DateTime.Parse(doc.SelectSingleNode(@"//versions/version[@version='" + version + "']/savedReleaseTime").InnerText);
                             if (serverReleaseTime > savedDownloadTime)
                             {
                                 return false;
@@ -104,51 +105,57 @@ namespace MinecraftCL
         /// <param name="sGV"></param>
         /// <param name="errorInformation"></param>
         /// <returns></returns>
-        public static bool getVersionInformation(ref startGameVariables sGV, AuthenticationInformation auth, out string errorInformation)
+        public static VersionInformation getVersionInformation(
+            string version, 
+            ModpackType type,
+            AuthenticationInformation auth, 
+            string minecraftDirectory,
+            out bool versionExists, 
+            out string errorInformation)
         {
             dynamic mcVersionDynamic = MinecraftServerUtils.GetVersionsJson();
 
             // Change out "latest-release" and "latest-snapshot" to the actual versions
             if (mcVersionDynamic != null)
             {
-                if (sGV.Version == "latest-release")
+                if (version == "latest-release")
                 {
-                    sGV.Version = mcVersionDynamic.latest.release;
+                    version = mcVersionDynamic.latest.release;
                 }
-                else if (sGV.Version == "latest-snapshot")
+                else if (version == "latest-snapshot")
                 {
-                    sGV.Version = mcVersionDynamic.latest.snapshot;
+                    version = mcVersionDynamic.latest.snapshot;
                 }
             }
-            else if (sGV.Version == "latest-release" || sGV.Version == "latest-snapshot")
+            else if (version == "latest-release" || version == "latest-snapshot")
             {
                 // System is not connected to the internet/mojang servers and user is trying to launch a
                 // "latest-*****" version, return error.
                 errorInformation = "Could not locate latest version - are you connected to the internet?";
-                return false;
+                versionExists = false;
+                return null;
             }
 
-            bool versionExists = false;
-            string mcAssetsVersion = "";
-            string startingArguments = "";
-
-            if (checkMinecraftExists(sGV.Version) == true)
+            if (checkVersionExists(version, type) == true)
             {
                 // Version already exists
-                versionExists = true;
+                VersionInformation info = new VersionInformation();
 
                 XmlDocument doc = new XmlDocument();
                 doc.Load(System.Environment.CurrentDirectory + "\\.mcl\\VersionInformation.xml");
 
-                mcAssetsVersion = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/assetIndex").InnerText;
-                sGV.MCLibraryArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/minecraftLibraryList").InnerText;
-                sGV.MainClass = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/mainClass").InnerText;
-                startingArguments = doc.SelectSingleNode(@"//versions/version[@version='" + sGV.Version + "']/startingArguments").InnerText;
+                info.MainClass = doc.SelectSingleNode(@"//versions/version[@version='" + version + "']/mainClass").InnerText;
+
+                string libraries = doc.SelectSingleNode(@"//versions/version[@version='" + version + "']/minecraftLibraryList").InnerText;
+                info.LibraryLocations = new List<string>(libraries.Split(';'));
+
+                string startingArguments = doc.SelectSingleNode(@"//versions/version[@version='" + version + "']/startingArguments").InnerText;
+                string mcAssetsVersion = doc.SelectSingleNode(@"//versions/version[@version='" + version + "']/assetIndex").InnerText;
 
                 // Replace all of the various variables used with their actual values
                 startingArguments = startingArguments.Replace("${auth_player_name}", auth.MinecraftUsername);
-                startingArguments = startingArguments.Replace("${version_name}", sGV.Version);
-                startingArguments = startingArguments.Replace("${game_directory}", "\"" + sGV.MinecraftDirectory + "\"");
+                startingArguments = startingArguments.Replace("${version_name}", version);
+                startingArguments = startingArguments.Replace("${game_directory}", "\"" + minecraftDirectory + "\"");
                 startingArguments = startingArguments.Replace("${assets_root}", "\"" + Environment.CurrentDirectory + "\\.minecraft\\assets\""); // For 1.7 and above
                 startingArguments = startingArguments.Replace("${game_assets}", "\"" + Environment.CurrentDirectory + "\\.minecraft\\assets\\virtual\\legacy\""); // For legacy versions 1.6.4 or below
                 startingArguments = startingArguments.Replace("${assets_index_name}", mcAssetsVersion);
@@ -157,11 +164,20 @@ namespace MinecraftCL
                 startingArguments = startingArguments.Replace("${user_properties}", "{}"); // Yeah, no twitch here...
                 startingArguments = startingArguments.Replace("${user_type}", auth.UserType);
                 startingArguments = startingArguments.Replace("${auth_session}", auth.AccessToken);
-                sGV.LaunchArguments = startingArguments;
-            }
+                info.LaunchArguments = startingArguments;
 
-            errorInformation = "";
-            return versionExists;
+                info.MinecraftVersion = version;
+
+                versionExists = true;
+                errorInformation = "";
+                return info;
+            }
+            else
+            {
+                versionExists = false;
+                errorInformation = "Version does not exist.";
+                return null;
+            }
         }
 
         /// <summary>
@@ -181,7 +197,7 @@ namespace MinecraftCL
                 };
 
             // See if the vanilla version of Minecraft exists that is required
-            bool mcVersionExists = checkMinecraftExists(sGV.Version);
+            bool mcVersionExists = checkVersionExists(sGV.Version, profile.ModpackInfo.Type);
 
             if (!mcVersionExists)
             {
@@ -281,7 +297,7 @@ namespace MinecraftCL
 
         private static void SaveVersionInformation(VersionInformation info)
         {
-            string[] libraryLocationsArray = info.DownloadedLibraryLocations.ToArray();
+            string[] libraryLocationsArray = info.LibraryLocations.ToArray();
             string libraryLaunchString = String.Join("\";\"", libraryLocationsArray);
             libraryLaunchString = "\"" + libraryLaunchString + "\"";
 
@@ -427,11 +443,12 @@ namespace MinecraftCL
                 sGV.JavaLocation = profile.customJavaEXE;
 
             string versionInformationError;
-            getVersionInformation(ref sGV, authInfo, out versionInformationError);
-            if (versionInformationError != "")
+            bool versionExists;
+            VersionInformation info = getVersionInformation(sGV.Version, profile.ModpackInfo.Type, authInfo, sGV.MinecraftDirectory, out versionExists, out versionInformationError);
+            if (versionInformationError != "" || !versionExists)
                 return new LaunchGameReturn { returnInfo = versionInformationError, returnType = LaunchReturnType.VersionInformationError };
 
-            startGameReturn startReturn = MinecraftUtils.Start(sGV);
+            startGameReturn startReturn = MinecraftUtils.Start(sGV, info);
 
             switch (startReturn.ReturnCode)
             {
