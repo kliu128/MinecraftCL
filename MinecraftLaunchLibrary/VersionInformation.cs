@@ -30,11 +30,6 @@ namespace MinecraftLaunchLibrary
         public string MinecraftVersion { get; set; }
 
         /// <summary>
-        /// The time that Minecraft was downloaded.
-        /// </summary>
-        public DateTime DownloadTime { get; set; }
-
-        /// <summary>
         /// Includes information on how to launch the game, eg.
         /// --username ${auth_player_name}, etc.
         /// </summary>

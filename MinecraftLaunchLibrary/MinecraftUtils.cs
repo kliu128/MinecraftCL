@@ -502,7 +502,6 @@ namespace MinecraftLaunchLibrary
                 {
                     AssetIndex = mcAssetsVersion,
                     LibraryLocations = downloadedLibraryLocations,
-                    DownloadTime = DateTime.Now,
                     MainClass = mcMainClass,
                     LaunchArguments = launchArguments,
                     MinecraftVersion = mcVersion
