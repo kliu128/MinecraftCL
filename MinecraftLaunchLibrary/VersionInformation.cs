@@ -8,6 +8,11 @@ namespace MinecraftLaunchLibrary
     public class VersionInformation
     {
         public List<string> LibraryLocations { get; set; }
+
+        /// <summary>
+        /// Get list of libraries as formatted string (library.jar;library2.jar;...)
+        /// </summary>
+        /// <returns></returns>
         public string LibraryLocationsAsString()
         {
             if (LibraryLocations.Count != 0)
@@ -25,6 +30,7 @@ namespace MinecraftLaunchLibrary
             else
                 return null;
         }
+
         public string AssetIndex { get; set; }
         public string MainClass { get; set; }
         public string MinecraftVersion { get; set; }
