@@ -124,7 +124,6 @@ namespace MinecraftCL.FeedTheBeast
                 }
                 #endregion
 
-                // TODO: This is just a simple version of the server check, edges.json. Improve?
                 List<string> downloadMirrorList = new List<string>();
 
                 response = null;
